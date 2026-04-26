@@ -60,7 +60,7 @@ button:hover { background: #2563eb; }
 }
 
 .school-header {
-  background: rgba(37, 99, 235, 0.3); /* Um azul um pouco mais forte para destacar a escola */
+  background: rgba(37, 99, 235, 0.3);
   padding: 15px;
   border-radius: 10px;
   cursor: pointer;
@@ -198,7 +198,9 @@ td:hover { background: #f1f5f9; }
 </div>
 
 <script>
+// O SEU LINK NOVO JÁ ESTÁ AQUI:
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyvJkShNc1A2Rc9QVnQ2yPxZfyHSOUZHSDNqGwBaEcn0Y2r-7tVDyrpikqXrzCITb2Skg/exec';
+
 const BACKUP_KEY = 'diario_pro_backup';
 
 let schools = [];
@@ -220,18 +222,20 @@ async function save(showAlert = false) {
   setStatus("🔄 Salvando na nuvem...", "#f59e0b");
   
   try {
-    await fetch(WEB_APP_URL, {
+    const response = await fetch(WEB_APP_URL, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain;charset=utf-8",
       },
       body: JSON.stringify({ action: "save", content: schools })
     });
+    
     setStatus("✅ Salvo na nuvem com sucesso!", "#10b981");
     if(showAlert) alert("✔️ Dados sincronizados com sucesso!");
   } catch(e) {
+    console.error(e);
     setStatus("❌ Erro de conexão. Salvo neste aparelho.", "#ef4444");
-    if(showAlert) alert("Sem conexão. Dados salvos offline neste aparelho.");
+    if(showAlert) alert("Sem conexão com o Google. Dados salvos offline neste aparelho.");
   }
 }
 
@@ -247,6 +251,7 @@ async function load() {
       },
       body: JSON.stringify({ action: "load" })
     });
+    
     const data = await response.json();
     if (Array.isArray(data)) {
       schools = data;
@@ -254,6 +259,7 @@ async function load() {
       setStatus("✅ Dados carregados!", "#10b981");
     }
   } catch(e) {
+    console.error(e);
     setStatus("⚠️ Modo Offline (Mostrando últimos dados salvos)", "#f59e0b");
     const d = localStorage.getItem(BACKUP_KEY);
     if (d) schools = JSON.parse(d);
@@ -266,7 +272,6 @@ function addSchool() {
   if (!n.trim()) return;
   schools.push({ name: n.trim(), classes: [] });
   document.getElementById('schoolInput').value = '';
-  // Abre a escola automaticamente ao criá-la
   openState[`school-${schools.length - 1}`] = true;
   render(); save();
 }
@@ -278,7 +283,6 @@ function addClass(s) {
     name: n.trim(), students: [], subjects: [], notes: {},
     month: new Date().getMonth(), year: new Date().getFullYear()
   });
-  // Abre a turma automaticamente ao criá-la
   openState[`${s}-${schools[s].classes.length - 1}`] = true;
   render(); save();
 }
@@ -403,12 +407,10 @@ function render() {
     const sDiv = document.createElement('div');
     sDiv.className = 'section';
     
-    // Controle de minimizar da Escola (por padrão começam abertas se for undefined)
     const schoolKey = `school-${s}`;
     let isSchoolOpen = openState[schoolKey];
     if (isSchoolOpen === undefined) isSchoolOpen = true; 
 
-    // Cabecalho da escola clicável
     sDiv.innerHTML = `<div class='school-header' style="margin-bottom: ${isSchoolOpen ? '15px' : '0'};" onclick="openState['${schoolKey}'] = ${!isSchoolOpen}; render();">
       <h2 style="margin:0;">🏫 ${school.name}</h2>
       <div>
@@ -417,7 +419,6 @@ function render() {
       </div>
     </div>`;
 
-    // Só mostra as turmas se a escola estiver aberta
     if (isSchoolOpen) {
       school.classes.forEach((cls, c) => {
         const key = `${s}-${c}`;
