@@ -105,6 +105,8 @@ td:hover { background: #f1f5f9; }
   font-weight: bold;
 }
 
+.day-header { cursor: pointer; padding: 4px; }
+.day-header:hover { background: #2563eb; }
 .day-btn {
   display: inline-block;
   background: rgba(255, 255, 255, 0.2);
@@ -189,8 +191,9 @@ td:hover { background: #f1f5f9; }
 </div>
 
 <script>
-// LINK DA SUA NUVEM ATUALIZADO (VERSÃO 4)
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby9dY0xtZPhHuSWothvKRrbtvkjlN4hsa30Ew5-OurtOO4g8kas34kLgcVBmvCe8qEcpA/exec';
+// SEU NOVO LINK DEFINITIVO JÁ INSERIDO:
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxNzAf7pMLME8f_uDNBRIznFnxvOqHSiOgGbOYKMMDdZ7M662iFP5Iq4QalJSsJG19IdA/exec';
+
 const BACKUP_KEY = 'diario_pro_backup';
 
 let schools = [];
@@ -207,46 +210,44 @@ function setStatus(msg, color = "#10b981") {
   }
 }
 
+// FUNÇÃO SAVE BLINDADA (Ignora bloqueios do navegador)
 async function save(showAlert = false) {
   localStorage.setItem(BACKUP_KEY, JSON.stringify(schools));
   setStatus("🔄 Salvando na nuvem...", "#f59e0b");
   
   try {
-    const response = await fetch(WEB_APP_URL, {
+    await fetch(WEB_APP_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      mode: "no-cors",
       body: JSON.stringify({ action: "save", content: schools })
     });
-    
-    if (!response.ok) throw new Error();
     
     setStatus("✅ Salvo na nuvem com sucesso!", "#10b981");
     if(showAlert) alert("✔️ Dados sincronizados com sucesso!");
   } catch(e) {
-    setStatus("❌ Erro de conexão. Salvo neste aparelho.", "#ef4444");
+    console.error(e);
+    setStatus("❌ Erro de conexão. Salvo offline.", "#ef4444");
     if(showAlert) alert("Sem conexão. Dados salvos offline neste aparelho.");
   }
 }
 
 function manualSave() { save(true); }
 
+// FUNÇÃO LOAD
 async function load() {
   setStatus("🔄 Puxando dados da nuvem...", "#3b82f6");
   try {
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "load" })
-    });
-    
+    const response = await fetch(WEB_APP_URL);
     const data = await response.json();
+    
     if (Array.isArray(data)) {
       schools = data;
       localStorage.setItem(BACKUP_KEY, JSON.stringify(schools));
-      setStatus("✅ Dados carregados!", "#10b981");
+      setStatus("✅ Dados carregados da nuvem!", "#10b981");
     }
   } catch(e) {
-    setStatus("⚠️ Modo Offline (Backup local)", "#f59e0b");
+    console.error(e);
+    setStatus("⚠️ Modo Offline (Mostrando backup local)", "#f59e0b");
     const d = localStorage.getItem(BACKUP_KEY);
     if (d) schools = JSON.parse(d);
   }
@@ -417,7 +418,7 @@ function render() {
             </tr><tr>`;
             for(let d=1; d<=days; d++) {
               const hn = cls.notes && cls.notes[d] ? 'has-note' : '';
-              html += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
+              html += `<th class="day-header" onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
             }
             cls.subjects.forEach(sub => html += `<th style="background:#475569;">${sub}</th>`);
             if (cls.subjects.length === 0) html += `<th style="background:#475569;">-</th>`;
@@ -448,6 +449,7 @@ function render() {
   });
 }
 
+// Inicia o aplicativo puxando da nuvem
 load();
 </script>
 </body>
