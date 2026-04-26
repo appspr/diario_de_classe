@@ -49,16 +49,6 @@ button:hover { background: #2563eb; }
   border: 1px solid rgba(255,255,255,0.1);
 }
 
-.header {
-  background: rgba(255, 255, 255, .15);
-  padding: 12px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .school-header {
   background: rgba(37, 99, 235, 0.3);
   padding: 15px;
@@ -70,6 +60,16 @@ button:hover { background: #2563eb; }
   transition: 0.2s;
 }
 .school-header:hover { background: rgba(37, 99, 235, 0.5); }
+
+.header {
+  background: rgba(255, 255, 255, .15);
+  padding: 12px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 table {
   border-collapse: collapse;
@@ -105,8 +105,6 @@ td:hover { background: #f1f5f9; }
   font-weight: bold;
 }
 
-.day-header { cursor: pointer; padding: 4px; }
-.day-header:hover { background: #2563eb; }
 .day-btn {
   display: inline-block;
   background: rgba(255, 255, 255, 0.2);
@@ -118,7 +116,6 @@ td:hover { background: #f1f5f9; }
   background: #10b981;
   color: #fff;
   border: 1px solid #059669;
-  box-shadow: 0 0 5px rgba(16, 185, 129, 0.4);
 }
 
 .modal {
@@ -146,12 +143,6 @@ td:hover { background: #f1f5f9; }
   text-decoration: none;
   display: inline-block;
   box-shadow: 0 4px 15px rgba(0, 158, 227, 0.4);
-  transition: 0.3s;
-}
-.support-btn:hover {
-  background: #008cc9;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 158, 227, 0.6);
 }
 
 #syncStatus {
@@ -189,7 +180,7 @@ td:hover { background: #f1f5f9; }
 <div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
   <div class="modal-content">
     <h3 id="modalTitle" style="color: #1e40af; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;">Resumo da Aula</h3>
-    <textarea id="noteText" placeholder="Descreva o conteúdo ensinado neste dia..." style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #cbd5e1;"></textarea>
+    <textarea id="noteText" placeholder="Descreva o conteúdo ensinado..." style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #cbd5e1;"></textarea>
     <div style="display: flex; justify-content: flex-end; gap: 10px;">
       <button onclick="closeModal()" style="background: #ef4444; margin: 0;">Cancelar</button>
       <button onclick="saveNote()" style="background: #10b981; margin: 0;">Salvar Relatório</button>
@@ -198,9 +189,8 @@ td:hover { background: #f1f5f9; }
 </div>
 
 <script>
-// O SEU LINK NOVO JÁ ESTÁ AQUI:
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyvJkShNc1A2Rc9QVnQ2yPxZfyHSOUZHSDNqGwBaEcn0Y2r-7tVDyrpikqXrzCITb2Skg/exec';
-
+// LINK DA SUA NUVEM ATUALIZADO (VERSÃO 4)
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby9dY0xtZPhHuSWothvKRrbtvkjlN4hsa30Ew5-OurtOO4g8kas34kLgcVBmvCe8qEcpA/exec';
 const BACKUP_KEY = 'diario_pro_backup';
 
 let schools = [];
@@ -224,18 +214,17 @@ async function save(showAlert = false) {
   try {
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "save", content: schools })
     });
+    
+    if (!response.ok) throw new Error();
     
     setStatus("✅ Salvo na nuvem com sucesso!", "#10b981");
     if(showAlert) alert("✔️ Dados sincronizados com sucesso!");
   } catch(e) {
-    console.error(e);
     setStatus("❌ Erro de conexão. Salvo neste aparelho.", "#ef4444");
-    if(showAlert) alert("Sem conexão com o Google. Dados salvos offline neste aparelho.");
+    if(showAlert) alert("Sem conexão. Dados salvos offline neste aparelho.");
   }
 }
 
@@ -246,9 +235,7 @@ async function load() {
   try {
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "load" })
     });
     
@@ -259,8 +246,7 @@ async function load() {
       setStatus("✅ Dados carregados!", "#10b981");
     }
   } catch(e) {
-    console.error(e);
-    setStatus("⚠️ Modo Offline (Mostrando últimos dados salvos)", "#f59e0b");
+    setStatus("⚠️ Modo Offline (Backup local)", "#f59e0b");
     const d = localStorage.getItem(BACKUP_KEY);
     if (d) schools = JSON.parse(d);
   }
@@ -305,16 +291,16 @@ function addStudents(s, c) {
 }
 
 function editStudentName(s, c, i) {
-  const currentName = schools[s].classes[c].students[i].name;
-  const newName = prompt('Editar nome:', currentName);
-  if (newName !== null && newName.trim() !== '') {
-    schools[s].classes[c].students[i].name = newName.trim();
+  const cur = schools[s].classes[c].students[i].name;
+  const n = prompt('Editar nome:', cur);
+  if (n && n.trim()) {
+    schools[s].classes[c].students[i].name = n.trim();
     render(); save();
   }
 }
 
-function updateGrade(s, c, studentIdx, subject, value) {
-  schools[s].classes[c].students[studentIdx].grades[subject] = value.replace(',', '.');
+function updateGrade(s, c, si, sub, val) {
+  schools[s].classes[c].students[si].grades[sub] = val.replace(',', '.');
   save(); 
 }
 
@@ -359,44 +345,23 @@ function exportFullReport(s, c) {
   const cls = school.classes[c];
   const m = cls.month;
   const mesFormatado = m !== null ? (m+1).toString().padStart(2, '0') : '--';
-  
-  let html = `<html><head><title>Boletim - ${cls.name}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+  let html = `<html><head><title>Boletim - ${cls.name}</title><style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background: #f0f0f0; }
-    .name { text-align: left; font-weight: bold; white-space: nowrap; }
-    .btn-imprimir { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; float: right; font-weight: bold; }
-    @media print { .btn-imprimir { display: none; } body { padding: 0; } }
-  </style></head><body>
-  <button class=\"btn-imprimir\" onclick=\"window.print()\">🖨️ Imprimir</button>
-  <h2>${school.name}</h2>
-  <h3>Relatório - Turma: <b>${cls.name}</b></h3>
-  <p>Mês: ${mesFormatado}/${cls.year}</p>
-  <table>
-    <thead>
-      <tr>
-        <th class="name">Aluno</th>
-        <th>Faltas</th>
-        ${cls.subjects.map(sub => `<th>${sub}</th>`).join('')}
-      </tr>
-    </thead>
-    <tbody>`;
-
+    .name { text-align: left; font-weight: bold; }
+    .btn { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; float: right; }
+    @media print { .btn { display: none; } }
+  </style></head><body><button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+  <h2>${school.name}</h2><h3>Relatório - Turma: <b>${cls.name}</b></h3><p>Mês: ${mesFormatado}/${cls.year}</p>
+  <table><thead><tr><th class="name">Aluno</th><th>Faltas</th>${cls.subjects.map(sub => `<th>${sub}</th>`).join('')}</tr></thead><tbody>`;
   cls.students.forEach(st => {
-    let tf = 0;
-    if (st.absences[m]) tf = Object.values(st.absences[m]).filter(v => v).length;
-    html += `<tr>
-      <td class="name">${st.name}</td>
-      <td style="color:${tf > 0 ? 'red' : 'black'}; font-weight:bold;">${tf}</td>
-      ${cls.subjects.map(sub => `<td>${st.grades[sub] || '-'}</td>`).join('')}
-    </tr>`;
+    let tf = 0; if (st.absences[m]) tf = Object.values(st.absences[m]).filter(v => v).length;
+    html += `<tr><td class="name">${st.name}</td><td style="color:${tf > 0 ? 'red' : 'black'}; font-weight:bold;">${tf}</td>${cls.subjects.map(sub => `<td>${st.grades[sub] || '-'}</td>`).join('')}</tr>`;
   });
-
   html += `</tbody></table></body></html>`;
-  const w = window.open('', '_blank');
-  if(w) { w.document.write(html); w.document.close(); }
+  const w = window.open('', '_blank'); if(w) { w.document.write(html); w.document.close(); }
 }
 
 function render() {
@@ -452,7 +417,7 @@ function render() {
             </tr><tr>`;
             for(let d=1; d<=days; d++) {
               const hn = cls.notes && cls.notes[d] ? 'has-note' : '';
-              html += `<th class="day-header" onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
+              html += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
             }
             cls.subjects.forEach(sub => html += `<th style="background:#475569;">${sub}</th>`);
             if (cls.subjects.length === 0) html += `<th style="background:#475569;">-</th>`;
