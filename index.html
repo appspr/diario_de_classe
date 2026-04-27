@@ -6,89 +6,67 @@
     <title>Pauta Ágil - Gestão Escolar</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #0f172a, #1e3a8a); color: #fff; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-        h1 { text-align: center; margin-top: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-
-        /* Telas */
-        .login-card { background: rgba(255,255,255,0.1); padding: 50px 40px; border-radius: 24px; text-align: center; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 400px; margin-top: 100px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .card { background: rgba(255,255,255,0.1); padding: 50px 40px; border-radius: 24px; text-align: center; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 400px; margin-top: 100px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         #mainApp { width: 100%; max-width: 1100px; padding: 20px; box-sizing: border-box; display: none; }
         .hidden { display: none !important; }
-
-        /* Componentes */
         .section { background: rgba(255, 255, 255, .08); border-radius: 12px; margin-bottom: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
         .school-header { background: rgba(37, 99, 235, 0.4); padding: 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .header { background: rgba(255, 255, 255, .15); padding: 12px 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-
-        input, select, textarea { padding: 10px; border-radius: 8px; border: none; outline: none; font-size: 14px; }
-        button { padding: 10px 20px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button:hover { background: #2563eb; transform: translateY(-2px); }
-
-        /* Tabela */
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; background: #fff; color: #000; border-radius: 12px; overflow: hidden; font-size: 14px; }
-        th { background: #1e40af; color: #fff; padding: 12px 5px; }
+        button { padding: 12px 24px; border-radius: 10px; border: none; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; margin: 5px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; background: #fff; color: #000; border-radius: 12px; overflow: hidden; }
         th, td { border: 1px solid #e2e8f0; text-align: center; padding: 8px; }
-        .grade-input { width: 45px; text-align: center; font-weight: bold; border: 1px solid #ccc !important; }
-        .day-btn { display: inline-block; background: rgba(0,0,0,0.05); border-radius: 6px; padding: 5px 8px; font-weight: bold; cursor: pointer; }
-        .day-btn.has-note { background: #10b981; color: #fff; }
-
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal-content { background: #fff; color: #000; padding: 30px; border-radius: 16px; width: 450px; max-width: 90%; }
     </style>
 </head>
 <body>
 
-    <div id="loginScreen" class="login-card">
+    <div id="loginScreen" class="card">
         <h1>🚀 Pauta Ágil</h1>
-        <p id="loginMsg">Sincronizando acesso seguro...</p>
-        <button id="btnLogin" onclick="fazerLogin()">Entrar com Google</button>
+        <p id="loginMsg">Clique abaixo para liberar o acesso à sua conta escolar:</p>
         
+        <button onclick="fazerLogin()">Liberar Acesso Google</button>
+        
+        <div id="checkArea" class="hidden" style="margin-top:20px;">
+            <p>Após autorizar na outra aba, clique aqui:</p>
+            <button onclick="checkAccess()" style="background: #10b981;">Já autorizei, entrar no sistema</button>
+        </div>
+
         <div id="buySection" class="hidden">
-            <p style="color: #fda4af; font-weight: bold; margin-top: 20px;">Acesso Restrito.</p>
-            <p style="font-size: 14px;">E-mail sem licença ativa no sistema.</p>
-            <a href="https://mpago.la/25RuJm4" target="_blank" style="text-decoration:none;">
-                <button style="background: #10b981; width: 100%; padding: 15px; margin-top: 10px;">Assinar Licença Anual</button>
-            </a>
+            <p style="color: #fda4af; font-weight: bold; margin-top: 20px;">Acesso não localizado.</p>
+            <a href="https://mpago.la/25RuJm4" target="_blank"><button style="background: #10b981; width: 100%;">Assinar Agora</button></a>
         </div>
     </div>
 
     <div id="mainApp">
         <h1>🚀 Painel Pauta Ágil</h1>
-        <div style="text-align: center; margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px;">
-            <input id="schoolInput" placeholder="🏫 Nome da Escola" style="width: 250px;">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <input id="schoolInput" placeholder="🏫 Nome da Escola" style="padding: 10px; border-radius: 8px; border: none;">
             <button onclick="addSchool()">➕ Unidade</button>
-            <button onclick="save()" style="background: #10b981;">☁️ Sincronizar Tudo</button>
-            <div id="syncStatus" style="font-size: 13px; margin-top: 12px; height: 15px;"></div>
+            <button onclick="save()" style="background: #10b981;">☁️ Sincronizar</button>
+            <div id="syncStatus" style="font-weight: bold; margin-top: 10px;"></div>
         </div>
         <div id="schools"></div>
     </div>
 
-    <div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
-        <div class="modal-content">
-            <h3 id="modalTitle" style="margin-top:0; color: #1e3a8a;">📝 Registro de Aula</h3>
-            <textarea id="noteText" style="width:100%; height:150px; margin-bottom:15px; border: 1px solid #cbd5e1; border-radius: 8px;"></textarea>
-            <button onclick="saveNote()" style="background:#10b981; width:100%; padding: 12px;">Gravar no Diário</button>
-        </div>
-    </div>
-
 <script>
-    // SEU NOVO LINK COM O COMANDO ?run=1
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwnfAoc76JnMWV0ANB_98sKOlaw-s4AVc6UD6SK0ctuD_XZsRlHWISVsQTmhUKdF4lwMg/exec?run=1';
     
     let schools = [];
-    let openState = {};
-    let currentNote = {};
 
     function fazerLogin() {
-        window.location.href = WEB_APP_URL;
+        // Abre a autenticação do Google em uma aba separada
+        window.open(WEB_APP_URL, '_blank');
+        // Mostra o botão de confirmação no site principal
+        document.getElementById('checkArea').classList.remove('hidden');
+        document.getElementById('loginMsg').innerText = "Uma nova aba foi aberta para você autorizar o Google.";
     }
 
     async function checkAccess() {
+        const status = document.getElementById('syncStatus');
         try {
             const response = await fetch(WEB_APP_URL);
             const data = await response.json();
 
             if (data.error) {
-                document.getElementById('loginMsg').innerHTML = `Logado como:<br><b>${data.email}</b>`;
-                document.getElementById('btnLogin').classList.add('hidden');
+                document.getElementById('checkArea').classList.add('hidden');
                 document.getElementById('buySection').classList.remove('hidden');
             } else {
                 schools = data;
@@ -97,7 +75,7 @@
                 render();
             }
         } catch (e) {
-            document.getElementById('loginMsg').innerText = "Identificação necessária:";
+            alert("Ainda não detectamos sua autorização. Verifique se você aceitou os termos na outra aba e clique novamente.");
         }
     }
 
@@ -111,126 +89,28 @@
                 body: JSON.stringify({ action: "save", content: schools })
             });
             status.innerText = "✅ Sincronizado!";
-            setTimeout(() => status.innerText = "", 3000);
-        } catch (e) {
-            status.innerText = "❌ Erro na conexão.";
-        }
+        } catch (e) { status.innerText = "❌ Erro na conexão."; }
     }
 
     function addSchool() {
         const n = document.getElementById('schoolInput').value;
         if (!n.trim()) return;
         schools.push({ name: n.trim(), classes: [] });
-        document.getElementById('schoolInput').value = '';
         render(); save();
     }
-
-    function addClass(s) {
-        const n = prompt('Nome da Turma:');
-        if (n) {
-            schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 });
-            render(); save();
-        }
-    }
-
-    function addStudents(s, c) {
-        const input = prompt('Lista de alunos (um por linha):');
-        if (input) {
-            const names = input.split(/\n/).map(n => n.trim()).filter(Boolean);
-            names.forEach(n => schools[s].classes[c].students.push({ name: n, absences: {}, grades: {} }));
-            render(); save();
-        }
-    }
-
-    function addSubject(s, c) {
-        const n = prompt('Disciplina:');
-        if (n) { schools[s].classes[c].subjects.push(n); render(); save(); }
-    }
-
-    function toggleAbsence(s, c, i, d) {
-        const cls = schools[s].classes[c];
-        const st = cls.students[i];
-        if (!st.absences[cls.month]) st.absences[cls.month] = {};
-        st.absences[cls.month][d] = !st.absences[cls.month][d];
-        render(); save();
-    }
-
-    function updateGrade(s, c, i, sub, val) {
-        schools[s].classes[c].students[i].grades[sub] = val;
-        save();
-    }
-
-    function toggleOpen(key) { openState[key] = !openState[key]; render(); }
-
-    function openModal(s, c, d) {
-        currentNote = { s, c, d };
-        document.getElementById('noteText').value = schools[s].classes[c].notes[d]?.text || '';
-        document.getElementById('modal').style.display = 'flex';
-    }
-
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-    function saveNote() {
-        const { s, c, d } = currentNote;
-        if (!schools[s].classes[c].notes) schools[s].classes[c].notes = {};
-        schools[s].classes[c].notes[d] = { text: document.getElementById('noteText').value };
-        closeModal(); render(); save();
-    }
-
-    function getDays(m, y) { return new Date(y, m + 1, 0).getDate(); }
 
     function render() {
         const div = document.getElementById('schools');
         div.innerHTML = '';
         schools.forEach((school, s) => {
-            const sKey = `school-${s}`;
             const sDiv = document.createElement('div');
             sDiv.className = 'section';
-            sDiv.innerHTML = `<div class="school-header" onclick="toggleOpen('${sKey}')">
-                <h2 style="margin:0;">🏫 ${school.name}</h2>
-                <div><button onclick="event.stopPropagation(); addClass(${s})">➕ Turma</button> ${openState[sKey] ? '🔽' : '▶️'}</div>
-            </div>`;
-
-            if (openState[sKey]) {
-                school.classes.forEach((cls, c) => {
-                    const cKey = `${s}-${c}`;
-                    const cDiv = document.createElement('div');
-                    cDiv.className = 'section';
-                    cDiv.style.background = 'rgba(0,0,0,0.1)';
-                    let html = `<div class="header" onclick="toggleOpen('${cKey}')">
-                        <b>📂 Turma: ${cls.name}</b> <span>${openState[cKey] ? '🔽' : '▶️'}</span>
-                    </div>`;
-                    if (openState[cKey]) {
-                        html += `<div style="margin-top:10px;"><button onclick="addSubject(${s},${c})">➕ Matéria</button><button onclick="addStudents(${s},${c})">👥 Alunos</button></div>`;
-                        const days = getDays(cls.month, cls.year);
-                        html += `<div style="overflow-x:auto;"><table style="margin-top:10px;"><thead><tr><th>Alunos</th>`;
-                        for(let d=1; d<=days; d++) {
-                            const hn = (cls.notes && cls.notes[d]) ? 'has-note' : '';
-                            html += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
-                        }
-                        cls.subjects.forEach(sub => html += `<th>${sub}</th>`);
-                        html += `</tr></thead><tbody>`;
-                        cls.students.forEach((st, i) => {
-                            html += `<tr><td style="text-align:left;">${st.name}</td>`;
-                            for(let d=1; d<=days; d++) {
-                                const f = st.absences[cls.month]?.[d];
-                                html += `<td onclick="toggleAbsence(${s},${c},${i},${d})" style="color:${f?'red':''}; cursor:pointer;">${f?'F':''}</td>`;
-                            }
-                            cls.subjects.forEach(sub => {
-                                html += `<td><input class="grade-input" value="${st.grades[sub] || ''}" onchange="updateGrade(${s},${c},${i},'${sub}',this.value)"></td>`;
-                            });
-                            html += `</tr>`;
-                        });
-                        html += `</tbody></table></div>`;
-                    }
-                    cDiv.innerHTML = html;
-                    sDiv.appendChild(cDiv);
-                });
-            }
+            sDiv.innerHTML = `<div class="school-header"><h2>🏫 ${school.name}</h2></div>`;
             div.appendChild(sDiv);
         });
     }
 
+    // Tenta carregar automaticamente se já estiver logado
     checkAccess();
 </script>
 </body>
