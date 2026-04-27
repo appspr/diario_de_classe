@@ -1,69 +1,456 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pauta Ágil - Gestão Escolar</title>
-    <style>
-        /* Mantenho o seu visual profissional azul */
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #0f172a, #1e3a8a); color: #fff; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .card { background: rgba(255,255,255,0.1); padding: 50px 40px; border-radius: 24px; text-align: center; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .hidden { display: none !important; }
-        button { padding: 15px 25px; border-radius: 12px; border: none; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; transition: 0.3s; }
-        button:hover { background: #2563eb; transform: translateY(-2px); }
-        #mainApp { display: none; width: 100%; max-width: 1100px; padding: 20px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diário de Classe Pro (Cloud)</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: #fff;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+h1 { text-align: center; }
+
+input, select, textarea {
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+button {
+  margin: 5px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover { background: #2563eb; }
+
+.section {
+  background: rgba(255, 255, 255, .08);
+  border-radius: 12px;
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.school-header {
+  background: rgba(37, 99, 235, 0.3);
+  padding: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+.school-header:hover { background: rgba(37, 99, 235, 0.5); }
+
+.header {
+  background: rgba(255, 255, 255, .15);
+  padding: 12px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  background: #fff;
+  color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th {
+  background: #1e40af;
+  color: #fff;
+  padding: 8px 4px;
+  font-size: 12px;
+}
+
+th, td {
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+td { padding: 5px; cursor: pointer; transition: 0.2s; }
+td:hover { background: #f1f5f9; }
+
+.grade-input {
+  width: 45px;
+  text-align: center;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: bold;
+}
+
+.day-header { cursor: pointer; padding: 4px; }
+.day-header:hover { background: #2563eb; }
+.day-btn {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-weight: bold;
+}
+.day-btn.has-note {
+  background: #10b981;
+  color: #fff;
+  border: 1px solid #059669;
+}
+
+.modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, .75);
+  display: none; align-items: center; justify-content: center; z-index: 1000;
+}
+
+.modal-content {
+  background: #fff; color: #000; padding: 25px; border-radius: 10px; width: 420px; max-width: 90%;
+}
+
+.support-section {
+  margin-top: auto; 
+  padding-top: 40px;
+  padding-bottom: 20px;
+  text-align: center;
+}
+.support-btn {
+  background: #009ee3; 
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(0, 158, 227, 0.4);
+}
+
+#syncStatus {
+  display: block;
+  font-size: 14px;
+  margin-top: 10px;
+  height: 20px;
+  font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
-    <div id="loginScreen" class="card">
-        <h1>🚀 Pauta Ágil</h1>
-        <p id="statusMsg">Para evitar conflitos de contas, use o botão abaixo para entrar:</p>
-        
-        <button onclick="loginOficial()">Acessar com Google</button>
+<h1>📘 Diário de Classe Pro</h1>
 
-        <div id="buySection" class="hidden">
-            <p style="color: #fda4af; font-weight: bold; margin-top: 20px;">Acesso não autorizado.</p>
-            <a href="https://mpago.la/25RuJm4" target="_blank" style="text-decoration:none;"><button style="background: #10b981;">Assinar Licença</button></a>
-        </div>
-    </div>
+<div style="text-align: center; margin-bottom: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+  <input id="schoolInput" placeholder="🏫 Nome da escola" onkeypress="if(event.key === 'Enter') addSchool()" style="width: 250px;">
+  <button onclick="addSchool()">➕ Escola</button>
+  <button onclick="manualSave()" style="background: #10b981;">☁️ Sincronizar Tudo</button>
+</div>
+<div style="text-align: center; margin-bottom: 20px;">
+  <span id="syncStatus" style="color: #cbd5e1;"></span>
+</div>
 
-    <div id="mainApp">
-        <h1>🚀 Painel Pauta Ágil</h1>
-        <div id="schools"></div>
+<div id="schools"></div>
+
+<div class="support-section">
+  <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 12px;">Gostou do aplicativo? Ajude a manter este projeto vivo! ❤️</p>
+  <a href="https://mpago.la/25RuJm4" target="_blank" style="text-decoration: none;">
+    <button class="support-btn">🤝 Contribuir com R$ 4,90</button>
+  </a>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
+  <div class="modal-content">
+    <h3 id="modalTitle" style="color: #1e40af; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;">Resumo da Aula</h3>
+    <textarea id="noteText" placeholder="Descreva o conteúdo ensinado..." style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #cbd5e1;"></textarea>
+    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+      <button onclick="closeModal()" style="background: #ef4444; margin: 0;">Cancelar</button>
+      <button onclick="saveNote()" style="background: #10b981; margin: 0;">Salvar Relatório</button>
     </div>
+  </div>
+</div>
 
 <script>
-    // SEU LINK DE IMPLANTAÇÃO
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnfAoc76JnMWV0ANB_98sKOlaw-s4AVc6UD6SK0ctuD_XZsRlHWISVsQTmhUKdF4lwMg/exec';
+// SEU NOVO LINK DEFINITIVO JÁ INSERIDO:
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxNzAf7pMLME8f_uDNBRIznFnxvOqHSiOgGbOYKMMDdZ7M662iFP5Iq4QalJSsJG19IdA/exec';
 
-    function loginOficial() {
-        // Isso força o Google a mostrar a tela de seleção de conta, mesmo em janela normal
-        window.location.href = SCRIPT_URL + "?run=1&prompt=select_account";
+const BACKUP_KEY = 'diario_pro_backup';
+
+let schools = [];
+let openState = {};
+let currentNote = {};
+
+function setStatus(msg, color = "#10b981") {
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  el.innerText = msg;
+  el.style.color = color;
+  if(msg.includes("✅") || msg.includes("❌")) {
+    setTimeout(() => { el.innerText = ""; }, 4000);
+  }
+}
+
+// FUNÇÃO SAVE BLINDADA (Ignora bloqueios do navegador)
+async function save(showAlert = false) {
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(schools));
+  setStatus("🔄 Salvando na nuvem...", "#f59e0b");
+  
+  try {
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({ action: "save", content: schools })
+    });
+    
+    setStatus("✅ Salvo na nuvem com sucesso!", "#10b981");
+    if(showAlert) alert("✔️ Dados sincronizados com sucesso!");
+  } catch(e) {
+    console.error(e);
+    setStatus("❌ Erro de conexão. Salvo offline.", "#ef4444");
+    if(showAlert) alert("Sem conexão. Dados salvos offline neste aparelho.");
+  }
+}
+
+function manualSave() { save(true); }
+
+// FUNÇÃO LOAD
+async function load() {
+  setStatus("🔄 Puxando dados da nuvem...", "#3b82f6");
+  try {
+    const response = await fetch(WEB_APP_URL);
+    const data = await response.json();
+    
+    if (Array.isArray(data)) {
+      schools = data;
+      localStorage.setItem(BACKUP_KEY, JSON.stringify(schools));
+      setStatus("✅ Dados carregados da nuvem!", "#10b981");
     }
+  } catch(e) {
+    console.error(e);
+    setStatus("⚠️ Modo Offline (Mostrando backup local)", "#f59e0b");
+    const d = localStorage.getItem(BACKUP_KEY);
+    if (d) schools = JSON.parse(d);
+  }
+  render();
+}
 
-    async function carregarDados() {
-        try {
-            // Tenta buscar os dados com um "carimbo" de tempo para evitar cache antigo
-            const timestamp = new Date().getTime();
-            const response = await fetch(`${SCRIPT_URL}?run=1&cb=${timestamp}`);
-            const data = await response.json();
+function addSchool() {
+  const n = document.getElementById('schoolInput').value;
+  if (!n.trim()) return;
+  schools.push({ name: n.trim(), classes: [] });
+  document.getElementById('schoolInput').value = '';
+  openState[`school-${schools.length - 1}`] = true;
+  render(); save();
+}
 
-            if (data.error) {
-                document.getElementById('statusMsg').innerHTML = `Logado como: <b>${data.email}</b>`;
-                document.getElementById('buySection').classList.remove('hidden');
-            } else if (Array.isArray(data)) {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                // Aqui entraria sua função render(data);
+function addClass(s) {
+  const n = prompt('Nome da turma:');
+  if (!n) return;
+  schools[s].classes.push({
+    name: n.trim(), students: [], subjects: [], notes: {},
+    month: new Date().getMonth(), year: new Date().getFullYear()
+  });
+  openState[`${s}-${schools[s].classes.length - 1}`] = true;
+  render(); save();
+}
+
+function addSubject(s, c) {
+  const n = prompt('Nome da Disciplina:');
+  if (!n || !n.trim()) return;
+  schools[s].classes[c].subjects.push(n.trim());
+  render(); save();
+}
+
+function addStudents(s, c) {
+  const input = prompt('Digite os alunos (um por linha):');
+  if (!input) return;
+  const names = input.split(/\n|,|;/).map(n => n.trim()).filter(Boolean);
+  names.forEach(n => {
+    schools[s].classes[c].students.push({ name: n, absences: {}, grades: {} });
+  });
+  render(); save();
+}
+
+function editStudentName(s, c, i) {
+  const cur = schools[s].classes[c].students[i].name;
+  const n = prompt('Editar nome:', cur);
+  if (n && n.trim()) {
+    schools[s].classes[c].students[i].name = n.trim();
+    render(); save();
+  }
+}
+
+function updateGrade(s, c, si, sub, val) {
+  schools[s].classes[c].students[si].grades[sub] = val.replace(',', '.');
+  save(); 
+}
+
+function toggleAbsence(s, c, i, d) {
+  const cls = schools[s].classes[c];
+  if(cls.month === null) return;
+  const st = cls.students[i];
+  if (!st.absences[cls.month]) st.absences[cls.month] = {};
+  st.absences[cls.month][d] = !st.absences[cls.month][d];
+  render(); save(); 
+}
+
+function toggleOpen(key) {
+  openState[key] = !openState[key];
+  render();
+}
+
+function getDays(m, y) { return new Date(y, m + 1, 0).getDate(); }
+
+function openModal(s, c, d) {
+  currentNote = { s, c, d };
+  const note = schools[s].classes[c].notes[d] || {};
+  document.getElementById('modalTitle').innerText = `📝 Relatório - Dia ${d}`;
+  document.getElementById('noteText').value = note.text || '';
+  document.getElementById('modal').style.display = 'flex';
+  document.getElementById('noteText').focus();
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+function saveNote() {
+  const { s, c, d } = currentNote;
+  const text = document.getElementById('noteText').value.trim();
+  if (!schools[s].classes[c].notes) schools[s].classes[c].notes = {};
+  if (text === '') delete schools[s].classes[c].notes[d];
+  else schools[s].classes[c].notes[d] = { text: text };
+  closeModal(); render(); save(); 
+}
+
+function exportFullReport(s, c) {
+  const school = schools[s];
+  const cls = school.classes[c];
+  const m = cls.month;
+  const mesFormatado = m !== null ? (m+1).toString().padStart(2, '0') : '--';
+  let html = `<html><head><title>Boletim - ${cls.name}</title><style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f0f0f0; }
+    .name { text-align: left; font-weight: bold; }
+    .btn { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; float: right; }
+    @media print { .btn { display: none; } }
+  </style></head><body><button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+  <h2>${school.name}</h2><h3>Relatório - Turma: <b>${cls.name}</b></h3><p>Mês: ${mesFormatado}/${cls.year}</p>
+  <table><thead><tr><th class="name">Aluno</th><th>Faltas</th>${cls.subjects.map(sub => `<th>${sub}</th>`).join('')}</tr></thead><tbody>`;
+  cls.students.forEach(st => {
+    let tf = 0; if (st.absences[m]) tf = Object.values(st.absences[m]).filter(v => v).length;
+    html += `<tr><td class="name">${st.name}</td><td style="color:${tf > 0 ? 'red' : 'black'}; font-weight:bold;">${tf}</td>${cls.subjects.map(sub => `<td>${st.grades[sub] || '-'}</td>`).join('')}</tr>`;
+  });
+  html += `</tbody></table></body></html>`;
+  const w = window.open('', '_blank'); if(w) { w.document.write(html); w.document.close(); }
+}
+
+function render() {
+  const div = document.getElementById('schools');
+  div.innerHTML = '';
+
+  schools.forEach((school, s) => {
+    const sDiv = document.createElement('div');
+    sDiv.className = 'section';
+    
+    const schoolKey = `school-${s}`;
+    let isSchoolOpen = openState[schoolKey];
+    if (isSchoolOpen === undefined) isSchoolOpen = true; 
+
+    sDiv.innerHTML = `<div class='school-header' style="margin-bottom: ${isSchoolOpen ? '15px' : '0'};" onclick="openState['${schoolKey}'] = ${!isSchoolOpen}; render();">
+      <h2 style="margin:0;">🏫 ${school.name}</h2>
+      <div>
+        <button onclick="event.stopPropagation(); addClass(${s})" style="background:#475569;">➕ Turma</button>
+        <span style="margin-left: 10px; font-size: 1.2em;">${isSchoolOpen ? '🔽' : '▶️'}</span>
+      </div>
+    </div>`;
+
+    if (isSchoolOpen) {
+      school.classes.forEach((cls, c) => {
+        const key = `${s}-${c}`;
+        const isOpen = openState[key];
+        const cDiv = document.createElement('div');
+        cDiv.className = 'section';
+        cDiv.style.background = 'rgba(0,0,0,0.15)';
+
+        let html = `<div class='header' onclick="toggleOpen('${key}')">
+          <span style="font-weight:bold;">📚 Turma: ${cls.name}</span>
+          <span>${isOpen ? '🔽' : '▶️'}</span>
+        </div>`;
+
+        if (isOpen) {
+          html += `<div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+            <select onchange="schools[${s}].classes[${c}].month=Number(this.value);render();save();">`;
+            const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+            for(let i=0; i<12; i++) html += `<option value="${i}" ${i==cls.month?'selected':''}>${meses[i]}</option>`;
+          html += `</select>
+            <button onclick="addSubject(${s},${c})" style="background:#8b5cf6;">➕ Disciplina</button>
+            <button onclick="addStudents(${s},${c})" style="background:#0ea5e9;">👨‍🎓 Alunos</button>
+            <button onclick="exportFullReport(${s},${c})" style="background:#f59e0b;">📊 Imprimir</button>
+          </div>`;
+
+          if (cls.students.length > 0) {
+            const days = getDays(cls.month, cls.year);
+            html += `<div style="overflow-x:auto; margin-top:15px;"><table><thead><tr>
+              <th rowspan="2" style="min-width: 150px; text-align:left; padding-left:10px;">Alunos</th>
+              <th colspan="${days}">Frequência Diária</th>
+              <th colspan="${cls.subjects.length || 1}" style="background:#334155;">Disciplinas</th>
+            </tr><tr>`;
+            for(let d=1; d<=days; d++) {
+              const hn = cls.notes && cls.notes[d] ? 'has-note' : '';
+              html += `<th class="day-header" onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
             }
-        } catch (e) {
-            console.log("Aguardando login oficial.");
-        }
-    }
+            cls.subjects.forEach(sub => html += `<th style="background:#475569;">${sub}</th>`);
+            if (cls.subjects.length === 0) html += `<th style="background:#475569;">-</th>`;
+            html += `</tr></thead><tbody>`;
 
-    // Verifica se o usuário já voltou do login
-    carregarDados();
+            cls.students.forEach((st, i) => {
+              html += `<tr><td style="text-align:left; padding-left:10px;" onclick="editStudentName(${s}, ${c}, ${i})">
+                  <b>${st.name}</b> <span style="opacity:0.2;font-size:10px;">✏️</span>
+                </td>`;
+              for(let d=1; d<=days; d++) {
+                const f = st.absences?.[cls.month]?.[d];
+                html += `<td onclick="toggleAbsence(${s},${c},${i},${d})" style="color:${f?'red':'inherit'};font-weight:${f?'bold':'normal'}">${f?'F':''}</td>`;
+              }
+              cls.subjects.forEach(sub => {
+                html += `<td style="background:#f1f5f9;"><input type="text" class="grade-input" value="${st.grades[sub] || ''}" onchange="updateGrade(${s},${c},${i},'${sub}',this.value)"></td>`;
+              });
+              if (cls.subjects.length === 0) html += `<td style="background:#f1f5f9;">-</td>`;
+              html += `</tr>`;
+            });
+            html += `</tbody></table></div>`;
+          }
+        }
+        cDiv.innerHTML = html;
+        sDiv.appendChild(cDiv);
+      });
+    }
+    div.appendChild(sDiv);
+  });
+}
+
+// Inicia o aplicativo puxando da nuvem
+load();
 </script>
 </body>
 </html>
