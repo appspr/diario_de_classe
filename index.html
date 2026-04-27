@@ -1,230 +1,237 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diário Pro - Sistema de Gestão</title>
-<style>
-body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #0f172a, #1e3a8a); color: #fff; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-h1 { text-align: center; margin-top: 20px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pauta Ágil - Gestão Escolar</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #0f172a, #1e3a8a); color: #fff; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        h1 { text-align: center; margin-top: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
-/* Tela de Login */
-.login-card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 400px; margin-top: 100px; }
-.hidden { display: none !important; }
+        /* Telas */
+        .login-card { background: rgba(255,255,255,0.1); padding: 50px 40px; border-radius: 24px; text-align: center; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 400px; margin-top: 100px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        #mainApp { width: 100%; max-width: 1100px; padding: 20px; box-sizing: border-box; display: none; }
+        .hidden { display: none !important; }
 
-/* App Principal */
-#mainApp { width: 100%; max-width: 1100px; padding: 20px; box-sizing: border-box; }
-.section { background: rgba(255, 255, 255, .08); border-radius: 12px; margin-bottom: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        /* Componentes */
+        .section { background: rgba(255, 255, 255, .08); border-radius: 12px; margin-bottom: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .school-header { background: rgba(37, 99, 235, 0.4); padding: 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .header { background: rgba(255, 255, 255, .15); padding: 12px 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
 
-.school-header { background: rgba(37, 99, 235, 0.4); padding: 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.header { background: rgba(255, 255, 255, .15); padding: 12px 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        input, select, textarea { padding: 10px; border-radius: 8px; border: none; outline: none; font-size: 14px; }
+        button { padding: 10px 20px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:hover { background: #2563eb; transform: translateY(-2px); }
 
-input, select, textarea { padding: 8px; border-radius: 8px; border: none; outline: none; }
-button { padding: 10px 16px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; margin: 5px; }
-button:hover { background: #2563eb; transform: translateY(-1px); }
+        /* Tabela */
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; background: #fff; color: #000; border-radius: 12px; overflow: hidden; font-size: 14px; }
+        th { background: #1e40af; color: #fff; padding: 12px 5px; }
+        th, td { border: 1px solid #e2e8f0; text-align: center; padding: 8px; }
+        .grade-input { width: 45px; text-align: center; font-weight: bold; border: 1px solid #ccc !important; }
+        .day-btn { display: inline-block; background: rgba(0,0,0,0.05); border-radius: 6px; padding: 5px 8px; font-weight: bold; cursor: pointer; }
+        .day-btn.has-note { background: #10b981; color: #fff; }
 
-table { border-collapse: collapse; width: 100%; margin-top: 10px; background: #fff; color: #000; border-radius: 8px; overflow: hidden; font-size: 14px; }
-th { background: #1e40af; color: #fff; padding: 10px 5px; }
-th, td { border: 1px solid #e2e8f0; text-align: center; padding: 6px; }
-.grade-input { width: 45px; text-align: center; font-weight: bold; border: 1px solid #ccc !important; }
-.day-btn { display: inline-block; background: rgba(0,0,0,0.1); border-radius: 4px; padding: 4px 6px; font-weight: bold; cursor: pointer; }
-.day-btn.has-note { background: #10b981; color: #fff; }
-
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
-.modal-content { background: #fff; color: #000; padding: 25px; border-radius: 12px; width: 400px; max-width: 90%; }
-</style>
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: #fff; color: #000; padding: 30px; border-radius: 16px; width: 450px; max-width: 90%; }
+    </style>
 </head>
 <body>
 
-<div id="loginScreen" class="login-card">
-  <h1>📘 Diário Pro</h1>
-  <p id="loginMsg">Validando sua conta Google...</p>
-  <div id="buySection" class="hidden">
-    <p style="color: #fda4af;">E-mail não autorizado para esta versão.</p>
-    <a href="https://mpago.la/25RuJm4" target="_blank"><button style="background: #10b981; width: 100%;">Quero Assinar o Diário Pro</button></a>
-    <p style="font-size: 12px; margin-top: 15px; opacity: 0.7;">Se você já pagou, aguarde a liberação pelo administrador.</p>
-  </div>
-</div>
+    <div id="loginScreen" class="login-card">
+        <h1>Diário de Classe</h1>
+        <p id="loginMsg">Sincronizando com sua conta Google...</p>
+        <button id="btnLogin" onclick="fazerLogin()">Entrar com Google</button>
+        
+        <div id="buySection" class="hidden">
+            <p style="color: #fda4af; font-weight: bold; margin-top: 20px;">Acesso não localizado.</p>
+            <p style="font-size: 14px;">Este e-mail não possui uma licença ativa.</p>
+            <a href="https://mpago.la/25RuJm4" target="_blank" style="text-decoration:none;">
+                <button style="background: #10b981; width: 100%; padding: 15px; margin-top: 10px;">Assinar Licença Anual</button>
+            </a>
+        </div>
+    </div>
 
-<div id="mainApp" class="hidden">
-  <h1>📘 Painel do Professor</h1>
-  <div style="text-align: center; margin-bottom: 20px;">
-    <input id="schoolInput" placeholder="🏫 Nome da Escola">
-    <button onclick="addSchool()">➕ Adicionar Escola</button>
-    <button onclick="save()" style="background: #10b981;">☁️ Sincronizar Tudo</button>
-    <div id="syncStatus" style="font-size: 14px; margin-top: 10px;"></div>
-  </div>
-  <div id="schools"></div>
-</div>
+    <div id="mainApp">
+        <h1>🚀 Painel Pauta Ágil</h1>
+        <div style="text-align: center; margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px;">
+            <input id="schoolInput" placeholder="🏫 Nome da Escola" style="width: 250px;">
+            <button onclick="addSchool()">➕ Unidade</button>
+            <button onclick="save()" style="background: #10b981;">☁️ Sincronizar Tudo</button>
+            <div id="syncStatus" style="font-size: 13px; margin-top: 12px; height: 15px;"></div>
+        </div>
+        <div id="schools"></div>
+    </div>
 
-<div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
-  <div class="modal-content">
-    <h3 id="modalTitle" style="margin-top:0;">Relatório da Aula</h3>
-    <textarea id="noteText" style="width:100%; height:120px; margin-bottom:10px;"></textarea>
-    <button onclick="saveNote()" style="background:#10b981; width:100%;">Salvar Relatório</button>
-  </div>
-</div>
+    <div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="margin-top:0; color: #1e3a8a;">📝 Registro de Aula</h3>
+            <textarea id="noteText" style="width:100%; height:150px; margin-bottom:15px; border: 1px solid #cbd5e1; border-radius: 8px;"></textarea>
+            <button onclick="saveNote()" style="background:#10b981; width:100%; padding: 12px;">Gravar no Diário</button>
+        </div>
+    </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3GseXdhPSNwr2Q9O-E-5Mm2v7_F_Q-ojxFQ64e05HYLT8YytKnf8AUSMiZTStkVfQgQ/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3GseXdhPSNwr2Q9O-E-5Mm2v7_F_Q-ojxFQ64e05HYLT8YytKnf8AUSMiZTStkVfQgQ/exec';
+    
+    let schools = [];
+    let openState = {};
+    let currentNote = {};
 
-let schools = [];
-let openState = {};
-let currentNote = {};
-
-async function checkAccess() {
-  const msg = document.getElementById('loginMsg');
-  try {
-    const response = await fetch(WEB_APP_URL);
-    const data = await response.json();
-
-    if (data.error) {
-      msg.innerHTML = `E-mail identificado:<br><b>${data.email}</b>`;
-      document.getElementById('buySection').classList.remove('hidden');
-    } else {
-      schools = data;
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('mainApp').classList.remove('hidden');
-      render();
+    function fazerLogin() {
+        window.location.href = WEB_APP_URL;
     }
-  } catch (e) {
-    msg.innerText = "Clique para entrar com o Google";
-    msg.innerHTML += `<br><br><button onclick="window.location.href='${WEB_APP_URL}'">Fazer Login</button>`;
-  }
-}
 
-async function save() {
-  document.getElementById('syncStatus').innerText = "🔄 Sincronizando...";
-  try {
-    await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify({ action: "save", content: schools })
-    });
-    document.getElementById('syncStatus').innerText = "✅ Salvo com sucesso!";
-  } catch (e) {
-    document.getElementById('syncStatus').innerText = "❌ Erro ao salvar.";
-  }
-}
+    async function checkAccess() {
+        try {
+            const response = await fetch(WEB_APP_URL);
+            const data = await response.json();
 
-function addSchool() {
-  const n = document.getElementById('schoolInput').value;
-  if (!n.trim()) return;
-  schools.push({ name: n.trim(), classes: [] });
-  document.getElementById('schoolInput').value = '';
-  render(); save();
-}
-
-function addClass(s) {
-  const n = prompt('Nome da turma:');
-  if (n) {
-    schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 });
-    render(); save();
-  }
-}
-
-function addStudents(s, c) {
-  const input = prompt('Lista de alunos (um por linha):');
-  if (input) {
-    const names = input.split(/\n/).map(n => n.trim()).filter(Boolean);
-    names.forEach(n => schools[s].classes[c].students.push({ name: n, absences: {}, grades: {} }));
-    render(); save();
-  }
-}
-
-function addSubject(s, c) {
-  const n = prompt('Nome da Disciplina:');
-  if (n) { schools[s].classes[c].subjects.push(n); render(); save(); }
-}
-
-function toggleAbsence(s, c, i, d) {
-  const cls = schools[s].classes[c];
-  const st = cls.students[i];
-  if (!st.absences[cls.month]) st.absences[cls.month] = {};
-  st.absences[cls.month][d] = !st.absences[cls.month][d];
-  render(); save();
-}
-
-function updateGrade(s, c, i, sub, val) {
-  schools[s].classes[c].students[i].grades[sub] = val;
-  save();
-}
-
-function toggleOpen(key) { openState[key] = !openState[key]; render(); }
-
-function openModal(s, c, d) {
-  currentNote = { s, c, d };
-  document.getElementById('noteText').value = schools[s].classes[c].notes[d]?.text || '';
-  document.getElementById('modal').style.display = 'flex';
-}
-
-function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-function saveNote() {
-  const { s, c, d } = currentNote;
-  if (!schools[s].classes[c].notes) schools[s].classes[c].notes = {};
-  schools[s].classes[c].notes[d] = { text: document.getElementById('noteText').value };
-  closeModal(); render(); save();
-}
-
-function getDays(m, y) { return new Date(y, m + 1, 0).getDate(); }
-
-function render() {
-  const div = document.getElementById('schools');
-  div.innerHTML = '';
-  schools.forEach((school, s) => {
-    const sKey = `school-${s}`;
-    const sDiv = document.createElement('div');
-    sDiv.className = 'section';
-    sDiv.innerHTML = `<div class="school-header" onclick="toggleOpen('${sKey}')">
-      <h2 style="margin:0;">🏫 ${school.name}</h2>
-      <div><button onclick="event.stopPropagation(); addClass(${s})">➕ Turma</button> ${openState[sKey] ? '🔽' : '▶️'}</div>
-    </div>`;
-
-    if (openState[sKey]) {
-      school.classes.forEach((cls, c) => {
-        const cKey = `${s}-${c}`;
-        const cDiv = document.createElement('div');
-        cDiv.className = 'section';
-        cDiv.style.background = 'rgba(0,0,0,0.1)';
-        let html = `<div class="header" onclick="toggleOpen('${cKey}')">
-          <b>📚 Turma: ${cls.name}</b> <span>${openState[cKey] ? '🔽' : '▶️'}</span>
-        </div>`;
-        if (openState[cKey]) {
-          html += `<div style="margin-top:10px;">
-            <button onclick="addSubject(${s},${c})">➕ Disciplina</button>
-            <button onclick="addStudents(${s},${c})">👨‍🎓 Alunos</button>
-          </div>`;
-          const days = getDays(cls.month, cls.year);
-          html += `<div style="overflow-x:auto;"><table><thead><tr><th>Alunos</th>`;
-          for(let d=1; d<=days; d++) {
-            const hn = cls.notes[d] ? 'has-note' : '';
-            html += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
-          }
-          cls.subjects.forEach(sub => html += `<th>${sub}</th>`);
-          html += `</tr></thead><tbody>`;
-          cls.students.forEach((st, i) => {
-            html += `<tr><td style="text-align:left;">${st.name}</td>`;
-            for(let d=1; d<=days; d++) {
-              const f = st.absences[cls.month]?.[d];
-              html += `<td onclick="toggleAbsence(${s},${c},${i},${d})" style="color:${f?'red':''}">${f?'F':''}</td>`;
+            if (data.error) {
+                document.getElementById('loginMsg').innerHTML = `Logado como:<br><b>${data.email}</b>`;
+                document.getElementById('btnLogin').classList.add('hidden');
+                document.getElementById('buySection').classList.remove('hidden');
+            } else {
+                schools = data;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').style.display = 'block';
+                render();
             }
-            cls.subjects.forEach(sub => {
-              html += `<td><input class="grade-input" value="${st.grades[sub] || ''}" onchange="updateGrade(${s},${c},${i},'${sub}',this.value)"></td>`;
-            });
-            html += `</tr>`;
-          });
-          html += `</tbody></table></div>`;
+        } catch (e) {
+            document.getElementById('loginMsg').innerText = "Identificação necessária:";
         }
-        cDiv.innerHTML = html;
-        sDiv.appendChild(cDiv);
-      });
     }
-    div.appendChild(sDiv);
-  });
-}
 
-checkAccess();
+    async function save() {
+        const status = document.getElementById('syncStatus');
+        status.innerText = "⏳ Sincronizando...";
+        try {
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ action: "save", content: schools })
+            });
+            status.innerText = "✅ Sincronizado!";
+            setTimeout(() => status.innerText = "", 3000);
+        } catch (e) {
+            status.innerText = "❌ Erro na conexão.";
+        }
+    }
+
+    function addSchool() {
+        const n = document.getElementById('schoolInput').value;
+        if (!n.trim()) return;
+        schools.push({ name: n.trim(), classes: [] });
+        document.getElementById('schoolInput').value = '';
+        render(); save();
+    }
+
+    function addClass(s) {
+        const n = prompt('Nome da Turma:');
+        if (n) {
+            schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 });
+            render(); save();
+        }
+    }
+
+    function addStudents(s, c) {
+        const input = prompt('Lista de alunos (um por linha):');
+        if (input) {
+            const names = input.split(/\n/).map(n => n.trim()).filter(Boolean);
+            names.forEach(n => schools[s].classes[c].students.push({ name: n, absences: {}, grades: {} }));
+            render(); save();
+        }
+    }
+
+    function addSubject(s, c) {
+        const n = prompt('Disciplina:');
+        if (n) { schools[s].classes[c].subjects.push(n); render(); save(); }
+    }
+
+    function toggleAbsence(s, c, i, d) {
+        const cls = schools[s].classes[c];
+        const st = cls.students[i];
+        if (!st.absences[cls.month]) st.absences[cls.month] = {};
+        st.absences[cls.month][d] = !st.absences[cls.month][d];
+        render(); save();
+    }
+
+    function updateGrade(s, c, i, sub, val) {
+        schools[s].classes[c].students[i].grades[sub] = val;
+        save();
+    }
+
+    function toggleOpen(key) { openState[key] = !openState[key]; render(); }
+
+    function openModal(s, c, d) {
+        currentNote = { s, c, d };
+        document.getElementById('noteText').value = schools[s].classes[c].notes[d]?.text || '';
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    function saveNote() {
+        const { s, c, d } = currentNote;
+        if (!schools[s].classes[c].notes) schools[s].classes[c].notes = {};
+        schools[s].classes[c].notes[d] = { text: document.getElementById('noteText').value };
+        closeModal(); render(); save();
+    }
+
+    function getDays(m, y) { return new Date(y, m + 1, 0).getDate(); }
+
+    function render() {
+        const div = document.getElementById('schools');
+        div.innerHTML = '';
+        schools.forEach((school, s) => {
+            const sKey = `school-${s}`;
+            const sDiv = document.createElement('div');
+            sDiv.className = 'section';
+            sDiv.innerHTML = `<div class="school-header" onclick="toggleOpen('${sKey}')">
+                <h2 style="margin:0;">🏫 ${school.name}</h2>
+                <div><button onclick="event.stopPropagation(); addClass(${s})">➕ Turma</button> ${openState[sKey] ? '🔽' : '▶️'}</div>
+            </div>`;
+
+            if (openState[sKey]) {
+                school.classes.forEach((cls, c) => {
+                    const cKey = `${s}-${c}`;
+                    const cDiv = document.createElement('div');
+                    cDiv.className = 'section';
+                    cDiv.style.background = 'rgba(0,0,0,0.1)';
+                    let html = `<div class="header" onclick="toggleOpen('${cKey}')">
+                        <b>📂 Turma: ${cls.name}</b> <span>${openState[cKey] ? '🔽' : '▶️'}</span>
+                    </div>`;
+                    if (openState[cKey]) {
+                        html += `<div style="margin-top:10px;"><button onclick="addSubject(${s},${c})">➕ Matéria</button><button onclick="addStudents(${s},${c})">👥 Alunos</button></div>`;
+                        const days = getDays(cls.month, cls.year);
+                        html += `<div style="overflow-x:auto;"><table style="margin-top:10px;"><thead><tr><th>Alunos</th>`;
+                        for(let d=1; d<=days; d++) {
+                            const hn = (cls.notes && cls.notes[d]) ? 'has-note' : '';
+                            html += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${hn}">${d}</span></th>`;
+                        }
+                        cls.subjects.forEach(sub => html += `<th>${sub}</th>`);
+                        html += `</tr></thead><tbody>`;
+                        cls.students.forEach((st, i) => {
+                            html += `<tr><td style="text-align:left;">${st.name}</td>`;
+                            for(let d=1; d<=days; d++) {
+                                const f = st.absences[cls.month]?.[d];
+                                html += `<td onclick="toggleAbsence(${s},${c},${i},${d})" style="color:${f?'red':''}; cursor:pointer;">${f?'F':''}</td>`;
+                            }
+                            cls.subjects.forEach(sub => {
+                                html += `<td><input class="grade-input" value="${st.grades[sub] || ''}" onchange="updateGrade(${s},${c},${i},'${sub}',this.value)"></td>`;
+                            });
+                            html += `</tr>`;
+                        });
+                        html += `</tbody></table></div>`;
+                    }
+                    cDiv.innerHTML = html;
+                    sDiv.appendChild(cDiv);
+                });
+            }
+            div.appendChild(sDiv);
+        });
+    }
+
+    checkAccess();
 </script>
 </body>
 </html>
