@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pauta Ágil - Gestão Escolar</title>
+<title>Meu Diário de Classe</title>
 
 <style>
 body {
@@ -26,12 +26,13 @@ h1 { text-align: center; font-size: 1.8em; margin: 15px 0; text-shadow: 0 2px 4p
   backdrop-filter: blur(10px);
 }
 
-/* --- TABELA E COLUNA FIXA --- */
+/* --- ESTRUTURA BLINDADA --- */
 .table-container {
   overflow-x: auto;
   margin-top: 15px;
   border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  background: #fff;
+  position: relative;
 }
 
 table {
@@ -45,68 +46,78 @@ table {
 th, td {
   border-right: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
-  padding: 8px;
+  padding: 10px;
   text-align: center;
   white-space: nowrap;
-  vertical-align: middle;
 }
 
-th { background: #1e40af; color: #fff; font-size: 12px; }
-
-th:nth-child(1), td:nth-child(1) {
-  position: sticky; left: 0; z-index: 10;
-  background: #f1f5f9; min-width: 35px;
-}
-th:nth-child(2), td:nth-child(2) {
-  position: sticky; left: 44px; z-index: 10;
-  background: #fff; text-align: left; min-width: 150px;
-  border-right: 2px solid #1e40af;
-}
-th:nth-child(1), th:nth-child(2) {
-  background: #1e40af !important; color: white; z-index: 11;
-}
-
-/* --- ESTILO TRANSFERIDO --- */
-.transferido { background-color: #f1f5f9 !important; color: #94a3b8 !important; opacity: 0.7; }
-.transferido b { text-decoration: line-through; }
-
-/* --- BOTÕES E SELECT --- */
-button, .select-estilizado {
-  padding: 10px 15px;
-  border-radius: 10px;
-  border: none;
-  background: #3b82f6;
-  color: #fff;
+/* CABEÇALHO AZUL */
+th { 
+  background: #1e40af; 
+  color: #fff; 
+  font-size: 11px;
   font-weight: bold;
-  cursor: pointer;
-  margin: 4px;
-  font-family: inherit;
-  font-size: 14px;
-  transition: 0.2s;
 }
-button:hover { background: #2563eb; }
 
+/* FIXAÇÃO DAS COLUNAS (Ajuste Final de Z-Index) */
+.fixed-col {
+  position: sticky;
+  z-index: 10; /* Camada dos nomes */
+  background: #fff;
+}
+
+.fixed-num {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: #f1f5f9;
+  min-width: 40px;
+}
+
+.fixed-name {
+  position: sticky;
+  left: 41px; /* Ajuste para colar no Nº */
+  z-index: 11;
+  background: #fff;
+  text-align: left;
+  min-width: 180px;
+  border-right: 3px solid #1e40af !important;
+}
+
+/* Cabeçalhos Fixos (Para não sumirem ao rolar) */
+thead th.fixed-num, thead th.fixed-name {
+  z-index: 20;
+  background: #1e40af !important;
+}
+
+/* --- BOTÕES E STATUS --- */
 .day-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.05); border-radius: 6px;
-  width: 25px; height: 25px; font-weight: bold; cursor: pointer;
+  background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
+  width: 28px; height: 28px; font-weight: bold; cursor: pointer; color: #1e40af;
 }
-.day-btn.has-note { background: #10b981; color: #fff; border: 1px solid #059669; }
+.day-btn.has-note { background: #10b981 !important; color: #fff !important; }
+
+button, .select-estilizado {
+  padding: 10px 15px; border-radius: 10px; border: none; background: #3b82f6;
+  color: #fff; font-weight: bold; cursor: pointer; margin: 4px; font-size: 13px;
+}
+
+.transferido { background-color: #f1f5f9 !important; color: #94a3b8 !important; opacity: 0.7; }
+.transferido b { text-decoration: line-through; }
+.falta-marcada { color: red !important; font-weight: bold; }
 
 .modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, .7);
-  display: none; align-items: center; justify-content: center; z-index: 1000;
+  background: rgba(0, 0, 0, .7); display: none; align-items: center; justify-content: center; z-index: 1000;
 }
-.modal-content {
-  background: #fff; color: #000; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px;
-}
+.modal-content { background: #fff; color: #000; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; }
 </style>
 </head>
 
 <body>
 
-<h1>Diário de Classe</h1>
+<h1>🚀 Meu Diário de Classe</h1>
 
 <div style="text-align: center; margin-bottom: 10px;">
   <input id="schoolInput" placeholder="🏫 Nome da Escola" style="padding: 10px; border-radius: 8px; border: none; width: 200px;">
@@ -120,8 +131,11 @@ button:hover { background: #2563eb; }
 <div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
   <div class="modal-content">
     <h3 id="modalTitle" style="margin-top:0; color:#1e40af;">📝 Resumo da Aula</h3>
-    <textarea id="noteText" style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; padding:10px;"></textarea>
-    <button onclick="saveNote()" style="background:#10b981; width: 100%;">Salvar Registro</button>
+    <textarea id="noteText" placeholder="O que foi ensinado hoje?" style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; padding:10px;"></textarea>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="closeModal()" style="background:#ef4444; flex:1;">Cancelar</button>
+        <button onclick="saveNote()" style="background:#10b981; flex:1;">Salvar Registro</button>
+    </div>
   </div>
 </div>
 
@@ -141,7 +155,7 @@ async function save() {
   } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ Offline"; }
 }
 
-function manualSave() { save(); alert("✔️ Dados salvos na nuvem!"); }
+function manualSave() { save(); alert("✔️ Dados salvos!"); }
 
 async function load() {
   try {
@@ -181,19 +195,15 @@ function addSubject(s, c) {
   if (n) { schools[s].classes[c].subjects.push(n); render(); save(); }
 }
 
-// FUNÇÃO UNIFICADA: EDITAR OU TRANSFERIR
 function menuAluno(s, c, i) {
     const aluno = schools[s].classes[c].students[i];
-    const opcao = prompt(`Aluno: ${aluno.name}\n\nDigite:\n1 - Editar Nome\n2 - ${aluno.transferido ? "Reativar Aluno" : "Marcar Transferido"}\n3 - Cancelar`);
-    
+    const opcao = prompt(`Aluno: ${aluno.name}\n\n1 - Editar Nome\n2 - ${aluno.transferido ? "Reativar" : "Transferir"}\n3 - Cancelar`);
     if (opcao === "1") {
         const novoNome = prompt("Novo nome:", aluno.name);
         if (novoNome) aluno.name = novoNome.trim();
     } else if (opcao === "2") {
         aluno.transferido = !aluno.transferido;
-    } else {
-        return;
-    }
+    } else { return; }
     render(); save();
 }
 
@@ -207,8 +217,10 @@ function closeModal() { document.getElementById('modal').style.display = 'none';
 
 function saveNote() {
   const { s, c, d } = currentNote;
+  const texto = document.getElementById('noteText').value.trim();
   if(!schools[s].classes[c].notes) schools[s].classes[c].notes = {};
-  schools[s].classes[c].notes[d] = { text: document.getElementById('noteText').value };
+  if (texto === "") delete schools[s].classes[c].notes[d];
+  else schools[s].classes[c].notes[d] = { text: texto };
   closeModal(); render(); save();
 }
 
@@ -222,16 +234,19 @@ function exportFullReport(s, c) {
       html += `<tr style="${st.transferido?'color:gray;text-decoration:line-through':''}"><td>${i+1}</td><td>${st.name} ${st.transferido?'(TR)':''}</td><td>${tf}</td></tr>`;
   });
   html += `</tbody></table><br><h4>Resumos:</h4>`;
-  Object.keys(cls.notes || {}).forEach(d => html += `<p><b>Dia ${d}:</b> ${cls.notes[d].text}</p>`);
+  Object.keys(cls.notes || {}).sort((a,b)=>a-b).forEach(d => html += `<p><b>Dia ${d}:</b> ${cls.notes[d].text}</p>`);
   html += `<button onclick="window.print()">Imprimir</button></body></html>`;
   const w = window.open(); w.document.write(html); w.document.close();
 }
 
-function toggleAbsence(s, c, i, d) {
+function toggleAbsence(element, s, c, i, d) {
   const cls = schools[s].classes[c];
-  if(!cls.students[i].absences[cls.month]) cls.students[i].absences[cls.month] = {};
-  cls.students[i].absences[cls.month][d] = !cls.students[i].absences[cls.month][d];
-  render(); save();
+  const st = cls.students[i];
+  if(!st.absences[cls.month]) st.absences[cls.month] = {};
+  st.absences[cls.month][d] = !st.absences[cls.month][d];
+  element.innerText = st.absences[cls.month][d] ? "F" : "";
+  element.className = st.absences[cls.month][d] ? "falta-marcada" : "";
+  save();
 }
 
 function getDays(m, y) { return new Date(y, m + 1, 0).getDate(); }
@@ -266,19 +281,27 @@ function render() {
 
           const days = getDays(cls.month, cls.year);
           sHtml += `<div class='table-container'><table><thead><tr>
-            <th rowspan="2">Nº</th><th rowspan="2">Alunos (Clique p/ editar)</th><th colspan="${days}">Chamada (Clique no dia p/ Resumo)</th><th colspan="${cls.subjects.length||1}">Notas</th>
-            </tr><tr>`;
-          for(let d=1; d<=days; d++) sHtml += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${cls.notes?.[d]?'has-note':''}">${d}</span></th>`;
+            <th class="fixed-num">Nº</th>
+            <th class="fixed-name">Alunos</th>
+            <th colspan="${days}">Chamada (2 Cliques)</th>
+            <th colspan="${cls.subjects.length||1}">Notas</th>
+            </tr><tr>
+            <th class="fixed-num" style="border-top:none"></th><th class="fixed-name" style="border-top:none"></th>`;
+          for(let d=1; d<=days; d++) {
+              const hasNote = cls.notes?.[d] ? 'has-note' : '';
+              sHtml += `<th><span onclick="openModal(${s},${c},${d})" class="day-btn ${hasNote}">${d}</span></th>`;
+          }
           cls.subjects.forEach(sub => sHtml += `<th>${sub}</th>`);
           sHtml += `</tr></thead><tbody>`;
           
           cls.students.forEach((st, i) => {
-            sHtml += `<tr class="${st.transferido?'transferido':''}">
-              <td style="background:#f1f5f9; font-weight:bold;">${i+1}</td>
-              <td onclick="menuAluno(${s},${c},${i})" style="cursor:pointer"><b>${st.name}</b> ${st.transferido?'(TR)':''}</td>`;
+            const trClass = st.transferido ? 'transferido' : '';
+            sHtml += `<tr class="${trClass}">
+              <td class="fixed-num">${i+1}</td>
+              <td class="fixed-name" onclick="menuAluno(${s},${c},${i})" style="cursor:pointer"><b>${st.name}</b> ${st.transferido?'(TR)':''}</td>`;
             for(let d=1; d<=days; d++) {
               const f = st.absences[cls.month]?.[d];
-              sHtml += `<td onclick="toggleAbsence(${s},${c},${i},${d})" style="color:${f?'red':''}; font-weight:${f?'bold':''}">${f?'F':''}</td>`;
+              sHtml += `<td ondblclick="toggleAbsence(this, ${s}, ${c}, ${i}, ${d})" class="${f?'falta-marcada':''}" style="cursor:pointer; user-select:none;">${f?'F':''}</td>`;
             }
             cls.subjects.forEach(sub => sHtml += `<td><input style="width:40px;text-align:center;" value="${st.grades[sub]||''}" onchange="schools[${s}].classes[${c}].students[${i}].grades['${sub}']=this.value;save()"></td>`);
             sHtml += `</tr>`;
