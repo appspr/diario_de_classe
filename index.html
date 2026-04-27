@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pauta Ágil - Gestão Escolar Completa</title>
+<title>Pauta Ágil - Gestão Escolar</title>
 
 <style>
 body {
@@ -26,7 +26,7 @@ h1 { text-align: center; font-size: 1.8em; margin: 15px 0; text-shadow: 0 2px 4p
   backdrop-filter: blur(10px);
 }
 
-/* --- COLUNA FIXA PARA CELULAR --- */
+/* --- TABELA E COLUNA FIXA --- */
 .table-container {
   overflow-x: auto;
   margin-top: 15px;
@@ -45,12 +45,14 @@ table {
 th, td {
   border-right: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
-  padding: 10px 8px;
+  padding: 8px;
   text-align: center;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
-/* Nº e Nome fixos na esquerda */
+th { background: #1e40af; color: #fff; font-size: 12px; }
+
 th:nth-child(1), td:nth-child(1) {
   position: sticky; left: 0; z-index: 10;
   background: #f1f5f9; min-width: 35px;
@@ -64,8 +66,12 @@ th:nth-child(1), th:nth-child(2) {
   background: #1e40af !important; color: white; z-index: 11;
 }
 
-/* --- BOTÕES E COMPONENTES --- */
-button {
+/* --- ESTILO TRANSFERIDO --- */
+.transferido { background-color: #f1f5f9 !important; color: #94a3b8 !important; opacity: 0.7; }
+.transferido b { text-decoration: line-through; }
+
+/* --- BOTÕES E SELECT --- */
+button, .select-estilizado {
   padding: 10px 15px;
   border-radius: 10px;
   border: none;
@@ -74,28 +80,16 @@ button {
   font-weight: bold;
   cursor: pointer;
   margin: 4px;
+  font-family: inherit;
+  font-size: 14px;
   transition: 0.2s;
 }
-button:hover { background: #2563eb; transform: translateY(-2px); }
-
-.school-header, .header {
-  padding: 15px;
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(37, 99, 235, 0.3);
-  margin-bottom: 5px;
-}
+button:hover { background: #2563eb; }
 
 .day-btn {
-  display: inline-block;
-  background: rgba(0,0,0,0.05);
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-weight: bold;
-  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.05); border-radius: 6px;
+  width: 25px; height: 25px; font-weight: bold; cursor: pointer;
 }
 .day-btn.has-note { background: #10b981; color: #fff; border: 1px solid #059669; }
 
@@ -126,12 +120,8 @@ button:hover { background: #2563eb; transform: translateY(-2px); }
 <div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
   <div class="modal-content">
     <h3 id="modalTitle" style="margin-top:0; color:#1e40af;">📝 Resumo da Aula</h3>
-    <p id="modalDate" style="font-size:12px; color:#64748b; margin-top:-10px;"></p>
-    <textarea id="noteText" placeholder="O que foi ensinado hoje?" style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; padding:10px; font-family:inherit;"></textarea>
-    <div style="display:flex; gap:10px;">
-        <button onclick="closeModal()" style="background:#ef4444; flex:1;">Cancelar</button>
-        <button onclick="saveNote()" style="background:#10b981; flex:1;">Salvar Registro</button>
-    </div>
+    <textarea id="noteText" style="width: 100%; height: 120px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; padding:10px;"></textarea>
+    <button onclick="saveNote()" style="background:#10b981; width: 100%;">Salvar Registro</button>
   </div>
 </div>
 
@@ -148,11 +138,7 @@ async function save() {
   try {
     await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "save", content: schools }) });
     document.getElementById('syncStatus').innerText = "✅ Sincronizado";
-    document.getElementById('syncStatus').style.color = "#10b981";
-  } catch(e) { 
-    document.getElementById('syncStatus').innerText = "⚠️ Offline"; 
-    document.getElementById('syncStatus').style.color = "#f59e0b";
-  }
+  } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ Offline"; }
 }
 
 function manualSave() { save(); alert("✔️ Dados salvos na nuvem!"); }
@@ -179,30 +165,41 @@ function addSchool() {
 
 function addClass(s) {
   const n = prompt('Nome da turma:');
-  if (n) { 
-    schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 }); 
-    render(); save(); 
-  }
+  if (n) { schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 }); render(); save(); }
 }
 
 function addStudents(s, c) {
-  const input = prompt('Cole a lista de alunos (um por linha):');
+  const input = prompt('Lista de alunos:');
   if (input) {
-    input.split(/\n/).forEach(n => { if(n.trim()) schools[s].classes[c].students.push({ name: n.trim(), absences: {}, grades: {} }); });
+    input.split(/\n/).forEach(n => { if(n.trim()) schools[s].classes[c].students.push({ name: n.trim(), absences: {}, grades: {}, transferido: false }); });
     render(); save();
   }
 }
 
 function addSubject(s, c) {
-  const n = prompt('Nome da Disciplina:');
+  const n = prompt('Disciplina:');
   if (n) { schools[s].classes[c].subjects.push(n); render(); save(); }
+}
+
+// FUNÇÃO UNIFICADA: EDITAR OU TRANSFERIR
+function menuAluno(s, c, i) {
+    const aluno = schools[s].classes[c].students[i];
+    const opcao = prompt(`Aluno: ${aluno.name}\n\nDigite:\n1 - Editar Nome\n2 - ${aluno.transferido ? "Reativar Aluno" : "Marcar Transferido"}\n3 - Cancelar`);
+    
+    if (opcao === "1") {
+        const novoNome = prompt("Novo nome:", aluno.name);
+        if (novoNome) aluno.name = novoNome.trim();
+    } else if (opcao === "2") {
+        aluno.transferido = !aluno.transferido;
+    } else {
+        return;
+    }
+    render(); save();
 }
 
 function openModal(s, c, d) {
   currentNote = { s, c, d };
-  const cls = schools[s].classes[c];
-  document.getElementById('modalDate').innerText = `Dia ${d} - Turma: ${cls.name}`;
-  document.getElementById('noteText').value = cls.notes[d]?.text || '';
+  document.getElementById('noteText').value = schools[s].classes[c].notes[d]?.text || '';
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -218,26 +215,16 @@ function saveNote() {
 function exportFullReport(s, c) {
   const school = schools[s];
   const cls = school.classes[c];
-  const m = cls.month;
-  let html = `<html><head><title>Relatório - ${cls.name}</title><style>
-    body { font-family: sans-serif; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #f0f0f0; }
-    .notes-sec { margin-top: 30px; border-top: 2px solid #333; padding-top: 10px; }
-  </style></head><body>
-  <h2>${school.name}</h2><h3>Turma: ${cls.name} - Mês: ${m+1}/2026</h3>
-  <table><thead><tr><th>Nº</th><th style="text-align:left">Aluno</th><th>Faltas</th>${cls.subjects.map(sub => `<th>${sub}</th>`).join('')}</tr></thead><tbody>`;
+  let html = `<html><head><title>Relatório</title><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:5px;text-align:center;}</style></head><body>`;
+  html += `<h2>${school.name} - Turma: ${cls.name}</h2><table><thead><tr><th>Nº</th><th>Aluno</th><th>Faltas</th></tr></thead><tbody>`;
   cls.students.forEach((st, i) => {
-    let tf = st.absences[m] ? Object.values(st.absences[m]).filter(v => v).length : 0;
-    html += `<tr><td>${i+1}</td><td style="text-align:left">${st.name}</td><td>${tf}</td>${cls.subjects.map(sub => `<td>${st.grades[sub] || '-'}</td>`).join('')}</tr>`;
+      let tf = st.absences[cls.month] ? Object.values(st.absences[cls.month]).filter(v => v).length : 0;
+      html += `<tr style="${st.transferido?'color:gray;text-decoration:line-through':''}"><td>${i+1}</td><td>${st.name} ${st.transferido?'(TR)':''}</td><td>${tf}</td></tr>`;
   });
-  html += `</tbody></table><div class="notes-sec"><h4>Resumos das Aulas:</h4>`;
-  Object.keys(cls.notes || {}).sort((a,b)=>a-b).forEach(day => {
-      html += `<p><b>Dia ${day}:</b> ${cls.notes[day].text}</p>`;
-  });
-  html += `</div><br><button onclick="window.print()">Imprimir</button></body></html>`;
-  const w = window.open('', '_blank'); w.document.write(html); w.document.close();
+  html += `</tbody></table><br><h4>Resumos:</h4>`;
+  Object.keys(cls.notes || {}).forEach(d => html += `<p><b>Dia ${d}:</b> ${cls.notes[d].text}</p>`);
+  html += `<button onclick="window.print()">Imprimir</button></body></html>`;
+  const w = window.open(); w.document.write(html); w.document.close();
 }
 
 function toggleAbsence(s, c, i, d) {
@@ -255,7 +242,7 @@ function render() {
   schools.forEach((school, s) => {
     const sKey = `school-${s}`;
     let sHtml = `<div class='section'>
-      <div class='school-header' onclick="openState['${sKey}']=!openState['${sKey}'];render()">
+      <div style="cursor:pointer; display:flex; justify-content:space-between;" onclick="openState['${sKey}']=!openState['${sKey}'];render()">
         <b>🏫 ${school.name}</b> <span>${openState[sKey]?'🔽':'▶️'}</span>
       </div>`;
     
@@ -263,44 +250,42 @@ function render() {
       sHtml += `<button onclick="addClass(${s})">➕ Turma</button>`;
       school.classes.forEach((cls, c) => {
         const cKey = `${s}-${c}`;
-        sHtml += `<div class='header' style="margin-top:10px" onclick="openState['${cKey}']=!openState['${cKey}'];render()">
-          <span>📚 ${cls.name}</span> <span>${openState[cKey]?'🔽':'▶️'}</span>
-        </div>`;
+        sHtml += `<div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">
+          <div style="cursor:pointer; display:flex; justify-content:space-between;" onclick="openState['${cKey}']=!openState['${cKey}'];render()">
+            <span>📚 ${cls.name}</span> <span>${openState[cKey]?'🔽':'▶️'}</span>
+          </div>`;
         
         if(openState[cKey]) {
           sHtml += `<div style="margin-top:10px">
-            <button onclick="addSubject(${s},${c})" style="background:#8b5cf6">➕ Disciplina</button>
-            <button onclick="addStudents(${s},${c})" style="background:#0ea5e9">👥 Alunos</button>
-            <button onclick="exportFullReport(${s},${c})" style="background:#f59e0b">📊 Imprimir</button>
-            <select onchange="schools[${s}].classes[${c}].month=Number(this.value);render();save();" style="padding:8px; border-radius:10px;">`;
-            const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-            meses.forEach((m, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${m}</option>`);
+                    <button onclick="addSubject(${s},${c})" style="background:#8b5cf6">➕ Disciplina</button>
+                    <button onclick="addStudents(${s},${c})" style="background:#0ea5e9">👥 Alunos</button>
+                    <button onclick="exportFullReport(${s},${c})" style="background:#f59e0b">📊 Imprimir</button>
+                    <select class="select-estilizado" onchange="schools[${s}].classes[${c}].month=Number(this.value);render();save();">`;
+          ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].forEach((m, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${m}</option>`);
           sHtml += `</select></div>`;
 
           const days = getDays(cls.month, cls.year);
           sHtml += `<div class='table-container'><table><thead><tr>
-            <th rowspan="2">Nº</th><th rowspan="2">Alunos</th><th colspan="${days}">Frequência (Clique no dia para o Resumo)</th><th colspan="${cls.subjects.length||1}">Notas</th>
+            <th rowspan="2">Nº</th><th rowspan="2">Alunos (Clique p/ editar)</th><th colspan="${days}">Chamada (Clique no dia p/ Resumo)</th><th colspan="${cls.subjects.length||1}">Notas</th>
             </tr><tr>`;
-          for(let d=1; d<=days; d++) {
-              const hasN = cls.notes && cls.notes[d] && cls.notes[d].text !== '' ? 'has-note' : '';
-              sHtml += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${hasN}">${d}</span></th>`;
-          }
+          for(let d=1; d<=days; d++) sHtml += `<th onclick="openModal(${s},${c},${d})"><span class="day-btn ${cls.notes?.[d]?'has-note':''}">${d}</span></th>`;
           cls.subjects.forEach(sub => sHtml += `<th>${sub}</th>`);
-          if(cls.subjects.length==0) sHtml += `<th>-</th>`;
           sHtml += `</tr></thead><tbody>`;
           
           cls.students.forEach((st, i) => {
-            sHtml += `<tr><td style="background:#f1f5f9; font-weight:bold;">${i+1}</td><td><b>${st.name}</b></td>`;
+            sHtml += `<tr class="${st.transferido?'transferido':''}">
+              <td style="background:#f1f5f9; font-weight:bold;">${i+1}</td>
+              <td onclick="menuAluno(${s},${c},${i})" style="cursor:pointer"><b>${st.name}</b> ${st.transferido?'(TR)':''}</td>`;
             for(let d=1; d<=days; d++) {
               const f = st.absences[cls.month]?.[d];
               sHtml += `<td onclick="toggleAbsence(${s},${c},${i},${d})" style="color:${f?'red':''}; font-weight:${f?'bold':''}">${f?'F':''}</td>`;
             }
-            cls.subjects.forEach(sub => sHtml += `<td><input style="width:40px;text-align:center;border:1px solid #ccc;" value="${st.grades[sub]||''}" onchange="schools[${s}].classes[${c}].students[${i}].grades['${sub}']=this.value;save()"></td>`);
-            if(cls.subjects.length==0) sHtml += `<td>-</td>`;
+            cls.subjects.forEach(sub => sHtml += `<td><input style="width:40px;text-align:center;" value="${st.grades[sub]||''}" onchange="schools[${s}].classes[${c}].students[${i}].grades['${sub}']=this.value;save()"></td>`);
             sHtml += `</tr>`;
           });
           sHtml += `</tbody></table></div>`;
         }
+        sHtml += `</div>`;
       });
     }
     div.innerHTML += sHtml + `</div>`;
