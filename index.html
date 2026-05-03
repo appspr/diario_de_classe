@@ -17,7 +17,7 @@ th, td { border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padd
 
 th { background: #1e40af; color: #fff; font-weight: bold; }
 .fixed-num { position: sticky; left: 0; z-index: 11; background: #f1f5f9; min-width: 30px; }
-.fixed-name { position: sticky; left: 31px; z-index: 11; background: #fff; text-align: left; min-width: 150px; border-right: 3px solid #1e40af !important; padding-left: 8px !important; }
+.fixed-name { position: sticky; left: 41px; z-index: 11; background: #fff; text-align: left; min-width: 150px; border-right: 3px solid #1e40af !important; padding-left: 8px !important; }
 thead th.fixed-num, thead th.fixed-name { z-index: 30; background: #1e40af !important; }
 
 .day-btn { display: inline-flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; width: 22px; height: 22px; font-weight: bold; cursor: pointer; color: #1e40af; font-size: 10px; }
@@ -129,8 +129,13 @@ function openModal(s, c, d) {
   const cls = schools[s].classes[c];
   currentNote = { s, c, d };
   const noteKey = `m${cls.month}_d${d}`;
-  // RECUPERAÇÃO: Tenta a chave nova, senão tenta a antiga (apenas o dia)
-  document.getElementById('noteText').value = cls.notes[noteKey]?.text || cls.notes[d]?.text || '';
+  
+  let notaValida = cls.notes[noteKey]?.text;
+  if (!notaValida && cls.month === 3) {
+      notaValida = cls.notes[d]?.text;
+  }
+  
+  document.getElementById('noteText').value = notaValida || '';
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -144,7 +149,7 @@ function saveNote() {
   if(!cls.notes) cls.notes = {};
   if (texto === "") {
     delete cls.notes[noteKey];
-    delete cls.notes[d]; // Limpa antiga também se houver
+    if (cls.month === 3) delete cls.notes[d]; 
   } else {
     cls.notes[noteKey] = { text: texto };
   }
@@ -159,13 +164,23 @@ function exportFullReport(s, c) {
   let html = `<html><head><title>Relatório</title><style>body{font-family:sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:8px;text-align:center;} .btn-voltar{background:#1e40af;color:white;padding:10px;border-radius:5px;border:none;cursor:pointer;margin-bottom:15px;}</style></head><body>
   <button class="btn-voltar" onclick="window.close()">← Voltar ao App</button>
   <h2>${school.name} - ${cls.name}</h2><p>Mês: ${meses[m]}</p>
-  <table><thead><tr><th>Nº</th><th>Aluno</th><th>Faltas Totais</th></tr></thead><tbody>`;
+  <table><thead><tr><th>Nº</th><th>Aluno</th><th>Faltas Totais (Dias)</th></tr></thead><tbody>`;
+  
   cls.students.forEach((st, i) => {
-      let faltas = st.absences[m] ? Object.values(st.absences[m]).filter(f => f).length : 0;
-      html += `<tr><td>${i+1}</td><td>${st.name}</td><td>${faltas}</td></tr>`;
+      let diasComFalta = [];
+      if (st.absences[m]) {
+          Object.keys(st.absences[m]).forEach(dia => {
+              if (st.absences[m][dia]) diasComFalta.push(dia.padStart(2, '0'));
+          });
+      }
+      diasComFalta.sort((a, b) => a - b);
+      let total = diasComFalta.length;
+      let resumoFaltas = total > 0 ? `<b>${total}</b><br><small>Dias: ${diasComFalta.join(', ')}</small>` : '0';
+
+      html += `<tr><td>${i+1}</td><td>${st.name}</td><td>${resumoFaltas}</td></tr>`;
   });
+  
   html += `</tbody></table><h4>📝 Notas de Aula:</h4>`;
-  // Exibição híbrida no relatório
   Object.keys(cls.notes || {}).sort().forEach(k => { 
       if(k.startsWith(`m${m}_`)) html += `<p><b>Dia ${k.split('_d')[1]}:</b> ${cls.notes[k].text}</p>`;
       else if(!isNaN(k) && m == 3) html += `<p><b>Dia ${k} (Abril):</b> ${cls.notes[k].text}</p>`;
@@ -187,7 +202,6 @@ function toggleAbsence(element, s, c, i, d) {
 function render() {
   const div = document.getElementById('schools');
   div.innerHTML = '';
-  // Identifica o mês vigente para abertura automática
   const mesVigente = new Date().getMonth();
 
   schools.forEach((school, s) => {
@@ -197,7 +211,7 @@ function render() {
       sHtml += `<button onclick="addClass(${s})">➕ Turma</button>`;
       school.classes.forEach((cls, c) => {
         const cKey = `${s}-${c}`;
-        // Se a turma não tiver mês definido, abre no mês vigente
+        // Força o mês atual se não houver um definido
         if (cls.month === undefined) cls.month = mesVigente;
 
         sHtml += `<div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">
@@ -215,8 +229,7 @@ function render() {
           sHtml += `<div class='table-container'><table><thead><tr><th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th colspan="${days}">Chamada</th></tr><tr><th class="fixed-num"></th><th class="fixed-name"></th>`;
           for(let d=1; d<=days; d++) {
             const noteKey = `m${cls.month}_d${d}`;
-            // Destaque verde inteligente (checa novo formato ou formato antigo para abril)
-            const hasNote = (cls.notes?.[noteKey] || (cls.month == 3 && cls.notes?.[d])) ? 'has-note' : '';
+            const hasNote = (cls.notes?.[noteKey] || (cls.month === 3 && cls.notes?.[d])) ? 'has-note' : '';
             sHtml += `<th><span onclick="openModal(${s},${c},${d})" class="day-btn ${hasNote}">${d}</span></th>`;
           }
           sHtml += `</tr></thead><tbody>`;
