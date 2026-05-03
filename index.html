@@ -20,7 +20,7 @@ th { background: #1e40af; color: #fff; font-weight: bold; }
 .fixed-name { position: sticky; left: 41px; z-index: 11; background: #fff; text-align: left; min-width: 150px; border-right: 3px solid #1e40af !important; padding-left: 8px !important; }
 thead th.fixed-num, thead th.fixed-name { z-index: 30; background: #1e40af !important; }
 
-.day-btn { display: inline-flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; width: 22px; height: 22px; font-weight: bold; cursor: pointer; color: #1e40af; font-size: 10px; }
+.day-btn { display: inline-flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; width: 22px; height: 22px; font-weight: bold; cursor: pointer; color: #1e40af; font-size: 10px; }
 .day-btn.has-note { background: #10b981 !important; color: #fff !important; }
 button, .select-estilizado { padding: 8px 12px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; margin: 4px; font-size: 12px; }
 .falta-marcada { color: red !important; font-weight: bold; background: #fee2e2; }
@@ -109,6 +109,7 @@ function addSchool() {
 
 function addClass(s) {
   const n = prompt('Nome da turma:');
+  // Alteração para garantir que novas turmas também criem com o mês vigente
   if (n) { schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 }); render(); save(); }
 }
 
@@ -202,6 +203,8 @@ function toggleAbsence(element, s, c, i, d) {
 function render() {
   const div = document.getElementById('schools');
   div.innerHTML = '';
+  
+  // LOGICA ADICIONADA: Captura o mês vigente (0-11)
   const mesVigente = new Date().getMonth();
 
   schools.forEach((school, s) => {
@@ -211,8 +214,11 @@ function render() {
       sHtml += `<button onclick="addClass(${s})">➕ Turma</button>`;
       school.classes.forEach((cls, c) => {
         const cKey = `${s}-${c}`;
-        // Força o mês atual se não houver um definido
-        if (cls.month === undefined) cls.month = mesVigente;
+        
+        // LOGICA ADICIONADA: Define o mês da turma como o mês vigente se não estiver selecionado
+        if (cls.month === undefined) {
+            cls.month = mesVigente;
+        }
 
         sHtml += `<div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
