@@ -17,19 +17,24 @@ th { background: #1e40af; color: #fff; font-size: 11px; font-weight: bold; }
 thead th.fixed-num, thead th.fixed-name { z-index: 30; background: #1e40af !important; }
 .day-btn { display: inline-flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; width: 28px; height: 28px; font-weight: bold; cursor: pointer; color: #1e40af; }
 .day-btn.has-note { background: #10b981 !important; color: #fff !important; }
-button, .select-estilizado { padding: 10px 15px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; margin: 4px; font-size: 13px; }
+button, .select-estilizado { padding: 8px 12px; border-radius: 8px; border: none; background: #3b82f6; color: #fff; font-weight: bold; cursor: pointer; margin: 2px; font-size: 12px; }
 .falta-marcada { color: red !important; font-weight: bold; }
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, .7); display: none; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: #fff; color: #000; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; }
+.move-btn { background: #64748b; padding: 5px 8px; font-size: 10px; }
 </style>
 </head>
 <body>
+
 <h1>🚀 Meu Diário de Classe</h1>
+
 <div style="text-align: center; margin-bottom: 10px;">
-  <button onclick="manualSave()" style="background: #10b981;">☁️ Sincronizar</button>
+  <button onclick="manualSave()" style="background: #10b981;">☁️ Sincronizar Agora</button>
   <div id="syncStatus" style="font-size: 12px; margin-top: 5px; font-weight: bold;"></div>
 </div>
+
 <div id="schools"></div>
+
 <div id="modal" class="modal" onclick="if(event.target==this)closeModal()">
   <div class="modal-content">
     <h3 id="modalTitle" style="margin-top:0; color:#1e40af;">📝 Resumo da Aula</h3>
@@ -40,9 +45,11 @@ button, .select-estilizado { padding: 10px 15px; border-radius: 10px; border: no
     </div>
   </div>
 </div>
+
 <script>
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxNzAf7pMLME8f_uDNBRIznFnxvOqHSiOgGbOYKMMDdZ7M662iFP5Iq4QalJSsJG19IdA/exec';
 const BACKUP_KEY = 'diario_pro_backup';
+
 let schools = [];
 let openState = {};
 let currentNote = {};
@@ -54,7 +61,9 @@ async function save() {
     document.getElementById('syncStatus').innerText = "✅ Sincronizado";
   } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ Offline"; }
 }
-function manualSave() { save(); alert("✔️ Dados salvos!"); }
+
+function manualSave() { save(); alert("✔️ Dados sincronizados com sucesso!"); }
+
 async function load() {
   try {
     const response = await fetch(WEB_APP_URL);
@@ -67,12 +76,29 @@ async function load() {
   render();
 }
 
+function editClassName(sIdx, cIdx) {
+    const newName = prompt("Alterar nome da turma:", schools[sIdx].classes[cIdx].name);
+    if (newName && newName.trim() !== "") {
+        schools[sIdx].classes[cIdx].name = newName.trim();
+        render(); save();
+    }
+}
+
+function moveClass(sIdx, cIdx, direction) {
+    const classes = schools[sIdx].classes;
+    const newIdx = cIdx + direction;
+    if (newIdx >= 0 && newIdx < classes.length) {
+        const temp = classes[cIdx];
+        classes[cIdx] = classes[newIdx];
+        classes[newIdx] = temp;
+        render(); save();
+    }
+}
+
 function openModal(s, c, d) {
   const cls = schools[s].classes[c];
   currentNote = { s, c, d };
-  // CHAVE MESTRA: m4_d3 (Maio) ou m3_d3 (Abril)
   const noteKey = `m${cls.month}_d${d}`;
-  // Se não encontrar a nova, limpa o campo para Maio não herdar Abril
   document.getElementById('noteText').value = cls.notes[noteKey]?.text || "";
   document.getElementById('modal').style.display = 'flex';
 }
@@ -103,38 +129,50 @@ function toggleAbsence(element, s, c, i, d) {
 function render() {
   const div = document.getElementById('schools');
   div.innerHTML = '';
-  schools.forEach((school, s) => {
-    const sKey = `school-${s}`;
+  schools.forEach((school, sIdx) => {
+    const sKey = `school-${sIdx}`;
     let sHtml = `<div class='section'>
       <div style="cursor:pointer; display:flex; justify-content:space-between;" onclick="openState['${sKey}']=!openState['${sKey}'];render()">
         <b>🏫 ${school.name}</b> <span>${openState[sKey]?'🔽':'▶️'}</span>
       </div>`;
+    
     if(openState[sKey]) {
-      school.classes.forEach((cls, c) => {
-        const cKey = `${s}-${c}`;
+      school.classes.forEach((cls, cIdx) => {
+        const cKey = `${sIdx}-${cIdx}`;
         if (cls.month === undefined) cls.month = new Date().getMonth();
+        
         sHtml += `<div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">
-          <div style="cursor:pointer; display:flex; justify-content:space-between;" onclick="openState['${cKey}']=!openState['${cKey}'];render()">
-            <span>📚 ${cls.name}</span> <span>${openState[cKey]?'🔽':'▶️'}</span>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span onclick="editClassName(${sIdx},${cIdx})" style="cursor:pointer; border-bottom:1px dashed #fff;">📚 ${cls.name}</span>
+            <div>
+              <button class="move-btn" onclick="moveClass(${sIdx},${cIdx},-1)">🔼</button>
+              <button class="move-btn" onclick="moveClass(${sIdx},${cIdx},1)">🔽</button>
+              <span style="cursor:pointer" onclick="openState['${cKey}']=!openState['${cKey}'];render()">${openState[cKey]?'🔽':'▶️'}</span>
+            </div>
           </div>`;
+        
         if(openState[cKey]) {
           sHtml += `<div style="margin-top:10px">
-                    <select class="select-estilizado" onchange="schools[${s}].classes[${c}].month=Number(this.value);render();save();">`;
-          ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].forEach((m, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${m}</option>`);
+                    <select class="select-estilizado" onchange="schools[${sIdx}].classes[${cIdx}].month=Number(this.value);render();save();">`;
+          ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].forEach((m, idx) => {
+              sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${m}</option>`;
+          });
           sHtml += `</select></div>`;
+
           const days = new Date(2026, cls.month + 1, 0).getDate();
           sHtml += `<div class='table-container'><table><thead><tr><th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th colspan="${days}">Chamada</th></tr><tr><th class="fixed-num"></th><th class="fixed-name"></th>`;
           for(let d=1; d<=days; d++) {
               const noteKey = `m${cls.month}_d${d}`;
               const hasNote = cls.notes?.[noteKey] ? 'has-note' : '';
-              sHtml += `<th><span onclick="openModal(${s},${c},${d})" class="day-btn ${hasNote}">${d}</span></th>`;
+              sHtml += `<th><span onclick="openModal(${sIdx},${cIdx},${d})" class="day-btn ${hasNote}">${d}</span></th>`;
           }
           sHtml += `</tr></thead><tbody>`;
-          cls.students.forEach((st, i) => {
-            sHtml += `<tr><td class="fixed-num">${i+1}</td><td class="fixed-name"><b>${st.name}</b></td>`;
+          
+          (cls.students || []).forEach((st, iIdx) => {
+            sHtml += `<tr><td class="fixed-num">${iIdx+1}</td><td class="fixed-name"><b>${st.name}</b></td>`;
             for(let d=1; d<=days; d++) {
-              const f = st.absences[cls.month]?.[d];
-              sHtml += `<td ondblclick="toggleAbsence(this, ${s}, ${c}, ${i}, ${d})" class="${f?'falta-marcada':''}">${f?'F':''}</td>`;
+              const f = st.absences && st.absences[cls.month] && st.absences[cls.month][d];
+              sHtml += `<td ondblclick="toggleAbsence(this, ${sIdx}, ${cIdx}, ${iIdx}, ${d})" class="${f?'falta-marcada':''}">${f?'F':''}</td>`;
             }
             sHtml += `</tr>`;
           });
