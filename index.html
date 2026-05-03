@@ -186,9 +186,12 @@ function menuAluno(s, c, i) {
 function openModal(s, c, d) {
   const cls = schools[s].classes[c];
   currentNote = { s, c, d };
-  // Busca nota usando a chave do mês atual para evitar repetição de outros meses
+  
   const noteKey = `m${cls.month}_d${d}`;
-  document.getElementById('noteText').value = cls.notes[noteKey]?.text || '';
+  // RECUPERAÇÃO: Se não tiver a nota nova, tenta a antiga (apenas d)
+  const notaExistente = cls.notes[noteKey]?.text || cls.notes[d]?.text || '';
+  
+  document.getElementById('noteText').value = notaExistente;
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -201,8 +204,13 @@ function saveNote() {
   const noteKey = `m${cls.month}_d${d}`;
 
   if(!cls.notes) cls.notes = {};
-  if (texto === "") delete cls.notes[noteKey];
-  else cls.notes[noteKey] = { text: texto };
+  
+  if (texto === "") {
+      delete cls.notes[noteKey];
+      delete cls.notes[d]; // Remove a antiga também se limpar
+  } else {
+      cls.notes[noteKey] = { text: texto };
+  }
   closeModal(); render(); save();
 }
 
@@ -247,13 +255,19 @@ function exportFullReport(s, c) {
   });
   
   html += `</tbody></table><br><h4>📝 Resumos das Aulas:</h4>`;
-  // Filtra e exibe apenas os resumos do mês selecionado
-  Object.keys(cls.notes || {}).forEach(key => {
-      if (key.startsWith(`m${m}_`)) {
-          const diaExibicao = key.split('_d')[1];
-          html += `<p><b>Dia ${diaExibicao.padStart(2, '0')}:</b> ${cls.notes[key].text}</p>`;
-      }
+  
+  // EXIBIÇÃO INTELIGENTE: Pega notas m_d ou d antigas
+  const diasUnicos = new Set();
+  Object.keys(cls.notes || {}).forEach(k => {
+      if(k.startsWith(`m${m}_`)) diasUnicos.add(k.split('_d')[1]);
+      else if(!isNaN(k) && m == 3) diasUnicos.add(k); // Assume que 'd' puro é Abril (3)
   });
+
+  Array.from(diasUnicos).sort((a,b)=>a-b).forEach(d => {
+      const nota = cls.notes[`m${m}_${d}`]?.text || cls.notes[d]?.text;
+      html += `<p><b>Dia ${d.padStart(2, '0')}:</b> ${nota}</p>`;
+  });
+
   html += `</body></html>`;
   
   const w = window.open();
@@ -309,7 +323,8 @@ function render() {
             <th class="fixed-num" style="border-top:none"></th><th class="fixed-name" style="border-top:none"></th>`;
           for(let d=1; d<=days; d++) {
               const noteKey = `m${cls.month}_d${d}`;
-              const hasNote = cls.notes?.[noteKey] ? 'has-note' : '';
+              // Lógica de destaque recupera cor se existir nota antiga ou nova
+              const hasNote = (cls.notes?.[noteKey] || (cls.month == 3 && cls.notes?.[d])) ? 'has-note' : '';
               sHtml += `<th><span onclick="openModal(${s},${c},${d})" class="day-btn ${hasNote}">${d}</span></th>`;
           }
           cls.subjects.forEach(sub => sHtml += `<th>${sub}</th>`);
