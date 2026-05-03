@@ -26,7 +26,6 @@ h1 { text-align: center; font-size: 1.8em; margin: 15px 0; text-shadow: 0 2px 4p
   backdrop-filter: blur(10px);
 }
 
-/* --- ESTRUTURA BLINDADA --- */
 .table-container {
   overflow-x: auto;
   margin-top: 15px;
@@ -51,46 +50,25 @@ th, td {
   white-space: nowrap;
 }
 
-/* CABEÇALHO AZUL */
-th { 
-  background: #1e40af; 
-  color: #fff; 
-  font-size: 11px;
-  font-weight: bold;
-}
+th { background: #1e40af; color: #fff; font-size: 11px; font-weight: bold; }
 
-/* FIXAÇÃO DAS COLUNAS (Ajuste Final de Z-Index) */
-.fixed-col {
-  position: sticky;
-  z-index: 10; /* Camada dos nomes */
-  background: #fff;
-}
-
+/* FIXAÇÃO DAS COLUNAS */
 .fixed-num {
-  position: sticky;
-  left: 0;
-  z-index: 11;
-  background: #f1f5f9;
-  min-width: 40px;
+  position: sticky; left: 0; z-index: 11;
+  background: #f1f5f9; min-width: 40px;
 }
 
 .fixed-name {
-  position: sticky;
-  left: 41px; /* Ajuste para colar no Nº */
-  z-index: 11;
-  background: #fff;
-  text-align: left;
-  min-width: 180px;
+  position: sticky; left: 41px; z-index: 11;
+  background: #fff; text-align: left; min-width: 180px;
   border-right: 3px solid #1e40af !important;
 }
 
-/* Cabeçalhos Fixos (Para não sumirem ao rolar) */
 thead th.fixed-num, thead th.fixed-name {
-  z-index: 20;
-  background: #1e40af !important;
+  z-index: 30; background: #1e40af !important;
 }
 
-/* --- BOTÕES E STATUS --- */
+/* COMPONENTES */
 .day-btn {
   display: inline-flex; align-items: center; justify-content: center;
   background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
@@ -201,9 +179,7 @@ function menuAluno(s, c, i) {
     if (opcao === "1") {
         const novoNome = prompt("Novo nome:", aluno.name);
         if (novoNome) aluno.name = novoNome.trim();
-    } else if (opcao === "2") {
-        aluno.transferido = !aluno.transferido;
-    } else { return; }
+    } else if (opcao === "2") aluno.transferido = !aluno.transferido;
     render(); save();
 }
 
@@ -227,16 +203,52 @@ function saveNote() {
 function exportFullReport(s, c) {
   const school = schools[s];
   const cls = school.classes[c];
-  let html = `<html><head><title>Relatório</title><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:5px;text-align:center;}</style></head><body>`;
-  html += `<h2>${school.name} - Turma: ${cls.name}</h2><table><thead><tr><th>Nº</th><th>Aluno</th><th>Faltas</th></tr></thead><tbody>`;
+  const m = cls.month;
+  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  
+  let html = `<html><head><title>Relatório Detalhado</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+    .btn-voltar { background: #1e40af; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f0f0f0; }
+    .text-left { text-align: left; }
+    @media print { .btn-voltar { display: none; } }
+  </style></head><body>
+  <button class="btn-voltar" onclick="window.close()">← Fechar e Voltar ao App</button>
+  <h2>${school.name}</h2>
+  <p><b>Turma:</b> ${cls.name} | <b>Mês:</b> ${meses[m]} de 2026</p>
+  <table><thead><tr><th>Nº</th><th class="text-left">Aluno</th><th>Faltas (Dias)</th>${cls.subjects.map(sub => `<th>${sub}</th>`).join('')}</tr></thead><tbody>`;
+  
   cls.students.forEach((st, i) => {
-      let tf = st.absences[cls.month] ? Object.values(st.absences[cls.month]).filter(v => v).length : 0;
-      html += `<tr style="${st.transferido?'color:gray;text-decoration:line-through':''}"><td>${i+1}</td><td>${st.name} ${st.transferido?'(TR)':''}</td><td>${tf}</td></tr>`;
+      let diasFalta = [];
+      if (st.absences[m]) {
+          Object.keys(st.absences[m]).forEach(dia => {
+              if (st.absences[m][dia]) diasFalta.push(dia.padStart(2, '0'));
+          });
+      }
+      diasFalta.sort((a,b) => a-b);
+      let totalFaltas = diasFalta.length;
+      let resumoFaltas = totalFaltas > 0 ? `<b>${totalFaltas}</b><br><small>Dias: ${diasFalta.join(', ')}</small>` : '0';
+
+      html += `<tr style="${st.transferido ? 'color:gray;text-decoration:line-through' : ''}">
+        <td>${i+1}</td>
+        <td class="text-left">${st.name} ${st.transferido ? '(TR)' : ''}</td>
+        <td>${resumoFaltas}</td>
+        ${cls.subjects.map(sub => `<td>${st.grades[sub] || '-'}</td>`).join('')}
+      </tr>`;
   });
-  html += `</tbody></table><br><h4>Resumos:</h4>`;
-  Object.keys(cls.notes || {}).sort((a,b)=>a-b).forEach(d => html += `<p><b>Dia ${d}:</b> ${cls.notes[d].text}</p>`);
-  html += `<button onclick="window.print()">Imprimir</button></body></html>`;
-  const w = window.open(); w.document.write(html); w.document.close();
+  
+  html += `</tbody></table><br><h4>📝 Resumos das Aulas:</h4>`;
+  Object.keys(cls.notes || {}).sort((a,b)=>a-b).forEach(d => {
+      html += `<p><b>Dia ${d.padStart(2, '0')}:</b> ${cls.notes[d].text}</p>`;
+  });
+  html += `</body></html>`;
+  
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 function toggleAbsence(element, s, c, i, d) {
@@ -276,15 +288,13 @@ function render() {
                     <button onclick="addStudents(${s},${c})" style="background:#0ea5e9">👥 Alunos</button>
                     <button onclick="exportFullReport(${s},${c})" style="background:#f59e0b">📊 Imprimir</button>
                     <select class="select-estilizado" onchange="schools[${s}].classes[${c}].month=Number(this.value);render();save();">`;
-          ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].forEach((m, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${m}</option>`);
+          const mesesSimples = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+          mesesSimples.forEach((mLabel, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${mLabel}</option>`);
           sHtml += `</select></div>`;
 
           const days = getDays(cls.month, cls.year);
           sHtml += `<div class='table-container'><table><thead><tr>
-            <th class="fixed-num">Nº</th>
-            <th class="fixed-name">Alunos</th>
-            <th colspan="${days}">Chamada (2 Cliques)</th>
-            <th colspan="${cls.subjects.length||1}">Notas</th>
+            <th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th colspan="${days}">Chamada (2 Cliques)</th><th colspan="${cls.subjects.length||1}">Notas</th>
             </tr><tr>
             <th class="fixed-num" style="border-top:none"></th><th class="fixed-name" style="border-top:none"></th>`;
           for(let d=1; d<=days; d++) {
