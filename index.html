@@ -28,6 +28,12 @@ button, .select-estilizado { padding: 8px 12px; border-radius: 10px; border: non
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, .7); display: none; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: #fff; color: #000; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; }
 .move-btn { background: none; color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 2px 6px; font-size: 12px; margin: 0 2px; border-radius: 4px; }
+
+.aluno-inativo{
+    background:#e5e7eb !important;
+    color:#6b7280 !important;
+}
+
 </style>
 </head>
 
@@ -110,13 +116,13 @@ function addSchool() {
 function addClass(s) {
   const n = prompt('Nome da turma:');
   // Alteração para garantir que novas turmas também criem com o mês vigente
-  if (n) { schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: 2026 }); render(); save(); }
+  if (n) { schools[s].classes.push({ name: n, students: [], subjects: [], notes: {}, month: new Date().getMonth(), year: new Date().getFullYear() }); render(); save(); }
 }
 
 function addStudents(s, c) {
   const input = prompt('Lista de alunos:');
   if (input) {
-    input.split(/\n/).forEach(n => { if(n.trim()) schools[s].classes[c].students.push({ name: n.trim(), absences: {}, grades: {}, transferido: false }); });
+    input.split(/\n/).forEach(n => { if(n.trim()) schools[s].classes[c].students.push({ name: n.trim(), absences: {}, grades: {}, status: 'ativo' }); });
     render(); save();
   }
 }
@@ -193,11 +199,18 @@ function exportFullReport(s, c) {
 function toggleAbsence(element, s, c, i, d) {
   const cls = schools[s].classes[c];
   const st = cls.students[i];
-  if(!st.absences[cls.month]) st.absences[cls.month] = {};
+  if((st.status||'ativo')!=='ativo') return; if(!st.absences[cls.month]) st.absences[cls.month] = {};
   st.absences[cls.month][d] = !st.absences[cls.month][d];
   element.innerText = st.absences[cls.month][d] ? "F" : "";
   element.className = st.absences[cls.month][d] ? "falta-marcada" : "";
   save();
+}
+
+
+function alterarStatus(s,c,i,status){
+  schools[s].classes[c].students[i].status = status;
+  save();
+  render();
 }
 
 function render() {
@@ -216,8 +229,9 @@ function render() {
         const cKey = `${s}-${c}`;
         
         // LOGICA ADICIONADA: Define o mês da turma como o mês vigente se não estiver selecionado
-        if (cls.month === undefined) {
+        if (cls.month === undefined || cls.month === null || cls.year !== new Date().getFullYear()) {
             cls.month = mesVigente;
+            cls.year = new Date().getFullYear();
         }
 
         sHtml += `<div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">
@@ -231,8 +245,8 @@ function render() {
           const mesesSimples = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
           mesesSimples.forEach((mLabel, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${mLabel}</option>`);
           sHtml += `</select></div>`;
-          const days = new Date(2026, cls.month + 1, 0).getDate();
-          sHtml += `<div class='table-container'><table><thead><tr><th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th colspan="${days}">Chamada</th></tr><tr><th class="fixed-num"></th><th class="fixed-name"></th>`;
+          const days = new Date(cls.year || new Date().getFullYear(), cls.month + 1, 0).getDate();
+          sHtml += `<div class='table-container'><table><thead><tr><th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th>Status</th><th colspan="${days}">Chamada</th></tr><tr><th class="fixed-num"></th><th class="fixed-name"></th><th></th>`;
           for(let d=1; d<=days; d++) {
             const noteKey = `m${cls.month}_d${d}`;
             const hasNote = (cls.notes?.[noteKey] || (cls.month === 3 && cls.notes?.[d])) ? 'has-note' : '';
@@ -240,7 +254,11 @@ function render() {
           }
           sHtml += `</tr></thead><tbody>`;
           cls.students.forEach((st, i) => {
-            sHtml += `<tr><td class="fixed-num">${i+1}</td><td class="fixed-name"><b>${st.name}</b></td>`;
+            const statusAluno = st.status || 'ativo';
+            const linhaClasse = statusAluno !== 'ativo' ? 'aluno-inativo' : '';
+            sHtml += `<tr class="${linhaClasse}"><td class="fixed-num">${i+1}</td><td class="fixed-name">
+<input value="${st.name}" onchange="schools[${s}].classes[${c}].students[${i}].name=this.value;save();" style="width:100%;border:none;background:transparent;font-weight:bold;outline:none;">
+</td>`;
             for(let d=1; d<=days; d++) {
               const f = st.absences[cls.month]?.[d];
               sHtml += `<td ondblclick="toggleAbsence(this, ${s}, ${c}, ${i}, ${d})" class="${f?'falta-marcada':''}" style="cursor:pointer; user-select:none;">${f?'F':''}</td>`;
