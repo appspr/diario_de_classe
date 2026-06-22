@@ -29,7 +29,7 @@ button, .select-estilizado { padding: 8px 12px; border-radius: 10px; border: non
 .modal-content { background: #fff; color: #000; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; }
 .move-btn { background: none; color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 2px 6px; font-size: 12px; margin: 0 2px; border-radius: 4px; }
 
-.aluno-inativo{
+.aluno-inativo td{
     background:#e5e7eb !important;
     color:#6b7280 !important;
 }
@@ -199,7 +199,7 @@ function exportFullReport(s, c) {
 function toggleAbsence(element, s, c, i, d) {
   const cls = schools[s].classes[c];
   const st = cls.students[i];
-  if((st.status||'ativo')!=='ativo') return; if(!st.absences[cls.month]) st.absences[cls.month] = {};
+  if(!st.absences[cls.month]) st.absences[cls.month] = {};
   st.absences[cls.month][d] = !st.absences[cls.month][d];
   element.innerText = st.absences[cls.month][d] ? "F" : "";
   element.className = st.absences[cls.month][d] ? "falta-marcada" : "";
@@ -214,6 +214,7 @@ function alterarStatus(s,c,i,status){
 }
 
 function render() {
+
   const div = document.getElementById('schools');
   div.innerHTML = '';
   
@@ -229,9 +230,8 @@ function render() {
         const cKey = `${s}-${c}`;
         
         // LOGICA ADICIONADA: Define o mês da turma como o mês vigente se não estiver selecionado
-        if (cls.month === undefined || cls.month === null || cls.year !== new Date().getFullYear()) {
+        if (cls.month === undefined || cls.month === null) {
             cls.month = mesVigente;
-            cls.year = new Date().getFullYear();
         }
 
         sHtml += `<div style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">
@@ -246,7 +246,7 @@ function render() {
           mesesSimples.forEach((mLabel, idx) => sHtml += `<option value="${idx}" ${idx==cls.month?'selected':''}>${mLabel}</option>`);
           sHtml += `</select></div>`;
           const days = new Date(cls.year || new Date().getFullYear(), cls.month + 1, 0).getDate();
-          sHtml += `<div class='table-container'><table><thead><tr><th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th>Status</th><th colspan="${days}">Chamada</th></tr><tr><th class="fixed-num"></th><th class="fixed-name"></th><th></th>`;
+          sHtml += `<div class='table-container'><table><thead><tr><th class="fixed-num">Nº</th><th class="fixed-name">Alunos</th><th colspan="${days}">Chamada</th></tr><tr><th class="fixed-num"></th><th class="fixed-name"></th>`;
           for(let d=1; d<=days; d++) {
             const noteKey = `m${cls.month}_d${d}`;
             const hasNote = (cls.notes?.[noteKey] || (cls.month === 3 && cls.notes?.[d])) ? 'has-note' : '';
@@ -254,9 +254,7 @@ function render() {
           }
           sHtml += `</tr></thead><tbody>`;
           cls.students.forEach((st, i) => {
-            const statusAluno = st.status || 'ativo';
-            const linhaClasse = statusAluno !== 'ativo' ? 'aluno-inativo' : '';
-            sHtml += `<tr class="${linhaClasse}"><td class="fixed-num">${i+1}</td><td class="fixed-name">
+            sHtml += `<tr><td class="fixed-num">${i+1}</td><td class="fixed-name">
 <input value="${st.name}" onchange="schools[${s}].classes[${c}].students[${i}].name=this.value;save();" style="width:100%;border:none;background:transparent;font-weight:bold;outline:none;">
 </td>`;
             for(let d=1; d<=days; d++) {
