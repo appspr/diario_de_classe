@@ -239,15 +239,9 @@ function render() {
             const hasNote = (cls.notes?.[noteKey] || (cls.month === 3 && cls.notes?.[d])) ? 'has-note' : '';
             sHtml += `<th><span onclick="openModal(${s},${c},${d})" class="day-btn ${hasNote}">${d}</span></th>`;
           }
-          sHtml += `<tr>
-<td class="fixed-num">${i+1}</td>
-<td class="fixed-name">
-<input
-type="text"
-value="${st.name}"
-onchange="schools[${s}].classes[${c}].students[${i}].name=this.value; save();"
-style="width:100%;border:none;background:transparent;font-weight:bold;font-size:11px;outline:none;padding:0;margin:0;">
-</td>`;
+          sHtml += `</tr></thead><tbody>`;
+          cls.students.forEach((st, i) => {
+            sHtml += `<tr><td class="fixed-num">${i+1}</td><td class="fixed-name"><b>${st.name}</b></td>`;
             for(let d=1; d<=days; d++) {
               const f = st.absences[cls.month]?.[d];
               sHtml += `<td ondblclick="toggleAbsence(this, ${s}, ${c}, ${i}, ${d})" class="${f?'falta-marcada':''}" style="cursor:pointer; user-select:none;">${f?'F':''}</td>`;
